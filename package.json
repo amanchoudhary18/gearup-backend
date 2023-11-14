@@ -19,5 +19,8 @@
     "nodemon": "^3.0.1",
     "path": "^0.12.7",
     "referral-code-generator": "^1.0.8"
+  },
+  "engines": {
+    "node": ">=14 <18.17.1"
   }
 }
