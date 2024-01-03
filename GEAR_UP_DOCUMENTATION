@@ -1,0 +1,74 @@
+GEAR UP
+
+------------------------------------------------------
+ONBOARDING
+------------------------------------------------------
+
+DATABASE - USER
+
+- PROFILE ENTITY
+	- User ID
+	- Phone Code [Valid Country Code from API] [String]
+	- Phone Number [Number valid check based on country] [Long]
+	- SPORTS List [Array]
+	- Objective of Playing [OBJECT]
+	- Time of Playing [OBJECT]
+	- Name of User [String]
+	- DOB of User [MONGODB DATE]
+	- Gender [String]
+	- Profile Picture [String]
+	- Location [OBJECT]
+
+- SPORTS NAME ENTITY
+	- ID [MONGODB OBJECT ID]
+	- NAME [STRING]
+
+- SPORTS LEVEL ENTITY
+	- ID [MONGODB OBJECT ID]
+	- NAME [STRING]
+
+- SPORTS ENTITY
+	- SPORTS NAME ID
+	- SPORTS LEVEL ID
+
+- PLAYING OBJECTIVE ENTITY
+	- ID [MONGODB OBJECT ID]
+	- NAME [STRING]
+
+- DAY OF PLAYING ENTITY
+	- ID [MONGODB OBJECT ID]
+	- NAME [STRING]
+
+
+APIS
+
+- OTP Creation API:
+	- Purpose
+		- Phone validation, OTP Generation, User Creation
+	- Request
+		- Phone Code
+		- Phone Number
+	- Response
+		- OTP
+
+- OTP Authentication API:
+	- Purpose
+		- OTP Authentication
+	- Request
+		- OTP
+		- Phone Number
+	- Response
+		- Token
+		- User Object [new/old user]
+		- IsNewUser
+
+- Update User API:
+	- Purpose
+		- Update the details of the user
+	- Request
+		- User ID
+		- User Object
+	- Response
+		- Updated User Object
+
+------------------------------------------------------
