@@ -1,0 +1,295 @@
+GEAR UP
+
+** Status and Message to be included in all API responses
+** token to be sent in all responses except onboarding
+
+QUERY: When we click on Connect, and then again click on connect, then Cancel Request Button is shown, now if we click on back button, and land to home page, what will be the UI, will it still show Connect before that opposite player card
+
+QUERY: What to do when you click on the notification, do the requirement, and return back, will the notification get removed or UI will update for kind of checked
+
+QUERY: What if there is a mismatch between the player who won while reviewing, how to handle that?
+
+------------------------------------------------------
+ONBOARDING
+------------------------------------------------------
+
+DATABASE - USER
+
+- PROFILE ENTITY
+	- User ID
+	- Phone Code [Valid Country Code from API] [String]
+	- Phone Number [Number valid check based on country] [Long]
+	- SPORTS List [Array]
+	- Objective of Playing [OBJECT]
+	- Time of Playing [OBJECT]
+	- Name of User [String]
+	- DOB of User [MONGODB DATE]
+	- Gender [String]
+	- Profile Picture [String]
+	- Location [OBJECT]
+
+- SPORTS NAME ENTITY
+	- ID [MONGODB OBJECT ID]
+	- NAME [STRING]
+
+- SPORTS LEVEL ENTITY
+	- ID [MONGODB OBJECT ID]
+	- NAME [STRING]
+
+- SPORTS ENTITY
+	- SPORTS NAME ID
+	- SPORTS LEVEL ID
+
+- PLAYING OBJECTIVE ENTITY
+	- ID [MONGODB OBJECT ID]
+	- NAME [STRING]
+
+- DAY OF PLAYING ENTITY
+	- ID [MONGODB OBJECT ID]
+	- NAME [STRING]
+
+
+APIS
+
+- OTP Creation API:
+	- Purpose
+		- Phone validation, OTP Generation, User Creation
+	- Request
+		- Phone Code
+		- Phone Number
+	- Response
+		- OTP ID
+
+- OTP Authentication API:
+	- Purpose
+		- OTP Authentication
+	- Request
+		- OTP ID
+		- OTP
+	- Response
+		- Token
+		- User Object [new/old user]
+		- IsNewUser
+
+- Update User API:
+	- Purpose
+		- Update the details of the user
+	- Request
+		- User ID
+		- User Object
+			- How to send the lists, is any mapping required? Like SportsList
+			- How to send the Date of birth? As string or something else
+			- 
+	- Response
+		- Updated User Object
+
+
+------------------------------------------------------
+HOME
+------------------------------------------------------
+
+APIS
+
+- Home API
+	- Purpose
+		- User Location {discussion required}
+		- Bucks
+		- Ad URL
+		- Venues {discussion required}
+	- Request
+		- user ID to be fetched from token itself
+	- Response
+		- bucks
+		- location
+		- Ad URL
+		- Venues List {discussion pending}
+
+- Players List API
+	
+	- Purpose
+		- Players List for Scrollable List
+	- Request
+		- sport name for fetching users
+		- sport name should be singular or multiple { discussion required }
+		- Distance Range [optional]
+		- Age group [optional]
+		- Gender [optional]
+	- Response
+		- List <Users> according to selected sports
+			- User will contain: 
+				- User ID
+				- User name
+				- Age
+				- Gender
+				- Profile Image
+				- Distance away from current user location
+				- List<Sports> he plays
+			- Implement this as kind of pagination, because user can scroll as long as he wants
+
+- Connect/Cancel Request API
+	- Purpose
+		- To be hit when user wants to connect/disconnect with another user
+	- Request
+		- Opposite player User ID
+	- Response
+		- Status
+		- Update in DB { discussion required }
+
+------------------------------------------------------
+NOTIFICATIONS
+------------------------------------------------------
+
+APIS
+
+- Notification API
+	- Purpose
+		- Fetch all the notifications based on a time range, usually a week
+	- Request
+		- user ID to be fetched from token
+	- Response
+		- Notifications List
+			- Notification will contain:
+				- Time Stamp
+				- Notification Type {discussion required}
+				- Message
+				- Image URL
+
+------------------------------------------------------
+PROFILE
+------------------------------------------------------
+
+APIS
+
+- User Details API
+	- Purpose
+		- Fetch all the details of a user to connect to him
+	- Request
+		- User ID
+	- Response
+		- User Details
+			- Name
+			- Age
+			- Gender
+			- Distance away { to be calculated from backend }
+			- Rating
+			- Sports user plays
+			- Bio
+			- Profession
+			- Game Stats for each sport
+				- Played
+				- Won
+				- Level
+			- Social Media handle links { discussion pending }
+			- Last 3 Reviews
+				- Review Date
+				- Reviewer Name
+				- Image URL
+				- Review
+				- Rating
+
+- Own User Details API
+	- Will be handled throught the above API only
+
+- Edit Own User Details API
+	- Purpose
+		- To edit your own details
+	- Request
+		- userID from token
+	- Response
+		- Each field is editable
+			- Except { discussion pending }
+
+	- Response
+		- Updated User Details
+
+------------------------------------------------------
+MY GAMES
+------------------------------------------------------
+
+APIS
+
+- Live Game
+- Past Games
+- Upcoming Games
+	- Purpose
+		- To get to know about my games I will/have play or ongoing
+	- Request
+		- UserID from token
+	- Response
+		- List<GameDetails>
+			- Game ID
+			- Opponent ID
+			- Opponent Name
+			- Date
+			- Sport Name
+			- Result [In case of past games]
+
+- Game Details API
+	- Purpose
+		- To have more detailed information about any game played
+	- Request
+		- Game ID
+	- Response
+		- Game ID
+		- player1 ID : this should be of current User
+		- player2 ID
+		- Opponent Name
+		- Date
+		- Sport Name
+		- Result [In case of past games]
+		- Location
+		- Winner
+		- Matches Played
+		- Matches won by player1
+		- Matches won by player2
+		- Matches drawn
+		- player1 review
+			- rating
+			- punctuality
+			- sportsmanship
+			- team player
+			- competitiveness
+			- respectful
+			- review message
+		- player2 review
+			- rating
+			- punctuality
+			- sportsmanship
+			- team player
+			- competitiveness
+			- respectful
+			- review message
+
+- Update Game Details API
+	- Purpose
+		- After match, add a review
+	- Request
+		- Game ID
+		- player1 ID: if both players update, then how to handle which one assings to which player number
+		- player2 ID
+		- Winner
+		- Matches Played
+		- Matches won by player1
+		- Matches won by player2
+		- Matches drawn
+		- player1 review
+			- rating
+			- punctuality
+			- sportsmanship
+			- team player
+			- competitiveness
+			- respectful
+			- review message
+	- Reponse
+		- depends on the UI flow, if nothing to show after updating, then only status would be required, else whole updated details to be shown.
+
+
+------------------------------------------------------
+REWARDS AND SUBSCRIPTION
+------------------------------------------------------
+- Understanding required of the whole flow
+
+------------------------------------------------------
+CHAT
+------------------------------------------------------
+- Rahul, work on this
