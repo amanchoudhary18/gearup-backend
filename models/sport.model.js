@@ -15,15 +15,6 @@ const sportSchema = new mongoose.Schema(
         "Advance",
       ],
     },
-
-    tokens: [
-      {
-        token: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
   },
   {
     timestamps: true,

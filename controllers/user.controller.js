@@ -34,7 +34,7 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(200).send({
+    res.status(500).send({
       status: "Failed",
       message: "Failed to send OTP",
     });
@@ -75,6 +75,7 @@ exports.otpverification = async (req, res) => {
             isReferralCodeUnique = true;
           }
         }
+
         const user = new User({
           mobileNumber,
           country,
@@ -115,7 +116,9 @@ exports.update = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      return res.status(404).send({ error: "User not found" });
+      return res
+        .status(404)
+        .send({ status: "Failed", message: "User not found" });
     }
 
     Object.assign(user, updateFields);
