@@ -22,6 +22,15 @@ app.get("/api/v1/home", async (req, res) => {
 const userRouter = require("./routes/user.route");
 app.use("/api/v1/user", userRouter);
 
+const sportRouter = require("./routes/sport.route");
+app.use("/api/v1/sport", sportRouter);
+
+const venueRouter = require("./routes/venue.route");
+app.use("/api/v1/venue", venueRouter);
+
+const gameRouter = require("./routes/game.route");
+app.use("/api/v1/game", gameRouter);
+
 app.listen(process.env.PORT, () => {
   console.log(`Server started on ${process.env.PORT}`);
 });

@@ -12,11 +12,16 @@ router.post("/otp_verification", UserController.otpverification);
 // update details
 router.post("/update", userAuth, UserController.update);
 
-// // get mydata
-// router.get("/mydata", userAuth, UserController.mydata);
+// get mydata
+router.get("/mydata", userAuth, UserController.mydata);
 
-// // logout
-// router.post("/logout", userAuth, UserController.logout);
+// get nearby players
+router.get("/getPlayers", userAuth, UserController.getPlayers);
+
+router.get("/getFilteredPlayers", userAuth, UserController.getFilteredPlayers);
+
+// logout
+router.post("/logout", userAuth, UserController.logout);
 
 // // delete otp
 // router.get("/delete-otp", UserController.deleteInactiveOtps);

@@ -13,8 +13,21 @@ const userSchema = new mongoose.Schema(
 
     favorite_sports: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Sport",
+        sport: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Sport",
+        },
+
+        level: {
+          type: String,
+          enum: [
+            "Beginner",
+            "Professional",
+            "Intermediate",
+            "Coach/Trainer",
+            "Advanced",
+          ],
+        },
       },
     ],
 
@@ -42,6 +55,30 @@ const userSchema = new mongoose.Schema(
     gender: {
       type: String,
       enum: ["Male", "Female", "Others"],
+    },
+
+    current_address: {
+      name: {
+        type: String,
+      },
+      lat: {
+        type: String,
+      },
+      lng: {
+        type: String,
+      },
+      line1: {
+        type: String,
+      },
+      line2: {
+        type: String,
+      },
+      line3: {
+        type: String,
+      },
+      line4: {
+        type: String,
+      },
     },
 
     addresses: [
@@ -79,6 +116,20 @@ const userSchema = new mongoose.Schema(
     referral_code: {
       type: String,
     },
+
+    bio: {
+      type: String,
+    },
+
+    profession: {
+      type: String,
+    },
+
+    bucks: {
+      type: Number,
+      default: 100,
+    },
+
     tokens: [
       {
         token: {

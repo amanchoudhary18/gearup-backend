@@ -5,16 +5,6 @@ const sportSchema = new mongoose.Schema(
     name: {
       type: String,
     },
-    level: {
-      type: String,
-      enum: [
-        "Beginner",
-        "Professional",
-        "Intermediate",
-        "Coach/Trainer",
-        "Advance",
-      ],
-    },
   },
   {
     timestamps: true,
