@@ -131,6 +131,7 @@ exports.update = async (req, res) => {
     "bio",
     "profession",
     "current_address",
+    "img",
   ];
 
   const updateFields = Object.fromEntries(
@@ -242,6 +243,24 @@ exports.getFilteredPlayers = async (req, res) => {
       .json({ status: "Successful", players: playersWithDistances });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
+  }
+};
+
+exports.getAnyPlayer = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const user = await User.findOne({ _id: userId });
+
+    if (!user) {
+      return res
+        .status(404)
+        .send({ status: "Failed", message: "User not found" });
+    }
+
+    res.status(200).send({ status: "Successful", user });
+  } catch (error) {
+    res.status(500).send({ status: "Failed", message: error.message });
   }
 };
 

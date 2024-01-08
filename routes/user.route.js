@@ -18,7 +18,11 @@ router.get("/mydata", userAuth, UserController.mydata);
 // get nearby players
 router.get("/getPlayers", userAuth, UserController.getPlayers);
 
+// get filtered players
 router.get("/getFilteredPlayers", userAuth, UserController.getFilteredPlayers);
+
+// get any player
+router.get("/getAnyPlayer/:id", userAuth, UserController.getAnyPlayer);
 
 // logout
 router.post("/logout", userAuth, UserController.logout);

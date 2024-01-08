@@ -129,7 +129,9 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 100,
     },
-
+    img: {
+      type: String,
+    },
     tokens: [
       {
         token: {
