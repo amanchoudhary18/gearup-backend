@@ -110,10 +110,10 @@ exports.otpverification = async (req, res) => {
         });
       }
     } else {
-      res.status(500).send({ status: "Failed", message: "Wrong OTP entered" });
+      res.status(401).send({ status: "Failed", message: "Wrong OTP entered" });
     }
   } catch (error) {
-    res.status(500).send({ status: "Failed", message: "Wrong OTP entered" });
+    res.status(500).send({ status: "Failed", message: "Couldn't verify the OTP" });
   }
 };
 
