@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema(
 
     objective: {
       type: String,
+      enum: ["Fun", "Practice", "Improve Game"],
     },
 
     play_time: {

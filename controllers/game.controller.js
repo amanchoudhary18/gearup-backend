@@ -30,8 +30,8 @@ exports.createGame = async (req, res) => {
 exports.getGames = async (req, res) => {
   try {
     const games = await Game.find({})
-      .populate("player1")
-      .populate("player2")
+      .populate("player1", "first_name last_name")
+      .populate("player2", "first_name last_name")
       .populate("venue", "name location")
       .populate("sport", "name");
 
@@ -43,15 +43,52 @@ exports.getGames = async (req, res) => {
 
 exports.getMyGames = async (req, res) => {
   try {
+    const currentDate = Date.now();
     const games = await Game.find({
       $or: [{ player1: req.user._id }, { player2: req.user._id }],
     })
-      .populate("player1")
-      .populate("player2")
+      .populate("player1", "first_name last_name")
+      .populate("player2", "first_name last_name")
       .populate("venue", "name location")
       .populate("sport", "name");
 
-    res.status(200).json({ status: "Success", games: games });
+    const recentGames = games
+      .filter((game) => {
+        if (game.matchDate < currentDate - game.duration * 60 * 1000) {
+          return true;
+        }
+        return false;
+      })
+      .map((game) => ({
+        ...game._doc,
+        status: "Recent",
+      }));
+
+    const liveGames = games
+      .filter((game) => {
+        const matchStartTime = game.matchDate;
+        const matchEndTime = matchStartTime + game.duration * 60 * 1000;
+        if (matchStartTime <= currentDate && currentDate <= matchEndTime) {
+          return true;
+        }
+        return false;
+      })
+      .map((game) => ({
+        ...game._doc,
+        status: "Live",
+      }));
+
+    const upcomingGames = games
+      .filter((game) => game.matchDate > currentDate)
+      .map((game) => ({
+        ...game._doc,
+        status: "Upcoming",
+      }));
+
+    res.status(200).json({
+      status: "Success",
+      games: [...recentGames, ...liveGames, ...upcomingGames],
+    });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
   }
@@ -64,17 +101,22 @@ exports.getRecentGames = async (req, res) => {
     let games = await Game.find({
       $or: [{ player1: req.user._id }, { player2: req.user._id }],
     })
-      .populate("player1")
-      .populate("player2")
+      .populate("player1", "first_name last_name")
+      .populate("player2", "first_name last_name")
       .populate("venue", "name location")
       .populate("sport", "name");
 
-    games = games.filter((game) => {
-      if (game.matchDate < currentDate - game.duration * 60 * 1000) {
-        return true;
-      }
-      return false;
-    });
+    games = games
+      .filter((game) => {
+        if (game.matchDate < currentDate - game.duration * 60 * 1000) {
+          return true;
+        }
+        return false;
+      })
+      .map((game) => ({
+        ...game._doc,
+        status: "Recent",
+      }));
 
     res.status(200).json({ status: "Success", games: games });
   } catch (error) {
@@ -89,19 +131,24 @@ exports.getLiveGames = async (req, res) => {
     let games = await Game.find({
       $or: [{ player1: req.user._id }, { player2: req.user._id }],
     })
-      .populate("player1")
-      .populate("player2")
+      .populate("player1", "first_name last_name")
+      .populate("player2", "first_name last_name")
       .populate("venue", "name location")
       .populate("sport", "name");
 
-    games = games.filter((game) => {
-      const matchStartTime = game.matchDate;
-      const matchEndTime = matchStartTime + game.duration * 60 * 1000;
-      if (matchStartTime <= currentDate && currentDate <= matchEndTime) {
-        return true;
-      }
-      return false;
-    });
+    games = games
+      .filter((game) => {
+        const matchStartTime = game.matchDate;
+        const matchEndTime = matchStartTime + game.duration * 60 * 1000;
+        if (matchStartTime <= currentDate && currentDate <= matchEndTime) {
+          return true;
+        }
+        return false;
+      })
+      .map((game) => ({
+        ...game._doc,
+        status: "Live",
+      }));
 
     res.status(200).json({ status: "Success", games: games });
   } catch (error) {
@@ -116,18 +163,17 @@ exports.getUpcomingGames = async (req, res) => {
     let games = await Game.find({
       $or: [{ player1: req.user._id }, { player2: req.user._id }],
     })
-      .populate("player1")
-      .populate("player2")
+      .populate("player1", "first_name last_name")
+      .populate("player2", "first_name last_name")
       .populate("venue", "name location")
       .populate("sport", "name");
 
-    games = games.filter((game) => {
-      const matchStartTime = game.matchDate;
-      if (matchStartTime > currentDate) {
-        return true;
-      }
-      return false;
-    });
+    games = games
+      .filter((game) => game.matchDate > currentDate)
+      .map((game) => ({
+        ...game._doc,
+        status: "Upcoming",
+      }));
 
     res.status(200).json({ status: "Success", games: games });
   } catch (error) {
@@ -151,20 +197,30 @@ exports.updateGame = async (req, res) => {
       game.sport = req.body.sport || game.sport;
       game.matchDate = req.body.matchDate || game.matchDate;
       game.duration = req.body.duration || game.duration;
-      game.result = req.body.result || game.result;
       game.venue = req.body.venue || game.venue;
 
-      game.matchesWonByPlayer1 =
-        req.body.matchesWonByPlayer1 || game.matchesWonByPlayer1;
+      if (!game.scorecard.updated && req.body.scorecard) {
+        game.scorecard = req.body.scorecard;
+        game.scorecard.updated = true;
+      }
+
+      if (!game.player1Feedback.updated && req.body.player1Feedback) {
+        game.player1Feedback = req.body.player1Feedback;
+        game.player1Feedback.updated = true;
+      }
+
       game.matchesWonByPlayer2 =
         req.body.matchesWonByPlayer2 || game.matchesWonByPlayer2;
       game.matchesDrawn = req.body.matchesDrawn || game.matchesDrawn;
 
       game.matchesPlayed =
         game.matchesWonByPlayer1 + game.matchesWonByPlayer2 + game.matchesDrawn;
+    } else {
+      if (!game.player2Feedback.updated && req.body.player2Feedback) {
+        game.player2Feedback = req.body.player2Feedback;
+        game.player2Feedback.updated = true;
+      }
     }
-
-    game.ratings = req.body.ratings || game.ratings;
 
     const updatedGame = await game.save();
 

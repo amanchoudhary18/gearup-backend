@@ -27,54 +27,111 @@ const gameSchema = new mongoose.Schema({
     ref: "Sport",
     required: true,
   },
-  result: {
-    type: String,
-  },
+
   venue: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Venue",
     required: true,
   },
-  matchesPlayed: {
-    type: Number,
-    default: 0,
+
+  scorecard: {
+    matchesPlayed: {
+      type: Number,
+      default: null,
+    },
+    matchesWonByPlayer1: {
+      type: Number,
+      default: null,
+    },
+    matchesWonByPlayer2: {
+      type: Number,
+      default: null,
+    },
+    matchesDrawn: {
+      type: Number,
+      default: null,
+    },
+    updated: {
+      type: Boolean,
+      default: false,
+    },
+    winner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
-  matchesWonByPlayer1: {
-    type: Number,
-    default: 0,
-  },
-  matchesWonByPlayer2: {
-    type: Number,
-    default: 0,
-  },
-  matchesDrawn: {
-    type: Number,
-    default: 0,
-  },
-  ratings: {
+
+  player1Feedback: {
     punctuality: {
       type: Number,
       enum: [0, 1, 2],
+      default: null,
     },
     sportsmanship: {
       type: Number,
       enum: [0, 1, 2],
+      default: null,
     },
     teamPlayer: {
       type: Number,
       enum: [0, 1, 2],
+      default: null,
     },
     competitiveness: {
       type: Number,
       enum: [0, 1, 2],
+      default: null,
     },
     respectful: {
       type: Number,
       enum: [0, 1, 2],
+      default: null,
     },
     reviewMessage: {
       type: Number,
       enum: [0, 1, 2],
+      default: null,
+    },
+    updated: {
+      type: Boolean,
+      default: false,
+    },
+  },
+
+  player2Feedback: {
+    punctuality: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: null,
+    },
+    sportsmanship: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: null,
+    },
+    teamPlayer: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: null,
+    },
+    competitiveness: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: null,
+    },
+    respectful: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: null,
+    },
+    reviewMessage: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: null,
+    },
+    updated: {
+      type: Boolean,
+      default: false,
     },
   },
 });

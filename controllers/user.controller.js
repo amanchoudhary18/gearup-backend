@@ -1,14 +1,12 @@
 const User = require("../models/user.model");
 const generateOTP = require("../utils/generateOTP");
 const OtpModel = require("../models/otp.model");
-const mongoose = require("mongoose");
 require("dotenv").config({ path: "../.env" });
 const referralCodeGenerator = require("referral-code-generator");
-const geolib = require("geolib");
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-  var R = 6371; // Radius of the earth in km
-  var dLat = deg2rad(lat2 - lat1); // deg2rad below
+  var R = 6371;
+  var dLat = deg2rad(lat2 - lat1);
   var dLon = deg2rad(lon2 - lon1);
   var a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
@@ -17,7 +15,8 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var d = R * c; // Distance in km
+  var d = R * c;
+
   return d;
 }
 
@@ -113,7 +112,9 @@ exports.otpverification = async (req, res) => {
       res.status(200).send({ status: "Failed", message: "Wrong OTP entered" });
     }
   } catch (error) {
-    res.status(500).send({ status: "Failed", message: "Couldn't verify the OTP" });
+    res
+      .status(500)
+      .send({ status: "Failed", message: "Couldn't verify the OTP" });
   }
 };
 
