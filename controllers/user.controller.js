@@ -192,10 +192,23 @@ exports.getPlayers = async (req, res) => {
         currentUser.current_address.lat,
         currentUser.current_address.lng
       );
+
+      if (user.birthday) {
+        const birthday = new Date(user.birthday);
+        const ageDate = new Date(Date.now() - birthday.getTime());
+        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+
+        return { user, distance, age };
+      }
+
       return { user, distance };
     });
 
     playersWithDistances.sort((a, b) => a.distance - b.distance);
+
+    playersWithDistances.forEach((player) => {
+      player.distance = Number(player.distance.toFixed(2));
+    });
 
     res.status(200).json({ status: "Successful", playersWithDistances });
   } catch (error) {
@@ -207,7 +220,7 @@ exports.getPlayers = async (req, res) => {
 exports.getFilteredPlayers = async (req, res) => {
   try {
     const currentUser = req.user;
-    const { gender, range, favouriteSport } = req.body;
+    const { gender, range, favouriteSport, favouriteSportLevel } = req.body;
 
     let filter = { _id: { $ne: currentUser._id } };
 
@@ -217,9 +230,14 @@ exports.getFilteredPlayers = async (req, res) => {
 
     if (favouriteSport) {
       filter["favorite_sports.sport"] = favouriteSport;
-      filter["favorite_sports.level"] = currentUser.favorite_sports.find(
-        (sport) => sport.sport.toString() === favouriteSport
-      ).level;
+    }
+
+    if (favouriteSportLevel) {
+      filter["favorite_sports.level"] = favouriteSportLevel;
+    }
+
+    if (!range) {
+      range = 10;
     }
 
     const allUsers = await User.find(filter);
@@ -232,11 +250,23 @@ exports.getFilteredPlayers = async (req, res) => {
           currentUser.current_address.lat,
           currentUser.current_address.lng
         );
+
+        if (user.birthday) {
+          const birthday = new Date(user.birthday);
+          const ageDate = new Date(Date.now() - birthday.getTime());
+          const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+
+          return { user, distance, age };
+        }
         return { user, distance };
       })
       .filter((player) => player.distance <= range);
 
     playersWithDistances.sort((a, b) => a.distance - b.distance);
+
+    playersWithDistances.forEach((player) => {
+      player.distance = Number(player.distance.toFixed(2));
+    });
 
     res
       .status(200)

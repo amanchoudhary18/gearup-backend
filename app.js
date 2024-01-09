@@ -31,6 +31,9 @@ app.use("/api/v1/venue", venueRouter);
 const gameRouter = require("./routes/game.route");
 app.use("/api/v1/game", gameRouter);
 
+const connectionRouter = require("./routes/connection.route");
+app.use("/api/v1/connection", connectionRouter);
+
 app.listen(process.env.PORT, () => {
   console.log(`Server started on ${process.env.PORT}`);
 });

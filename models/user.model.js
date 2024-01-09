@@ -33,7 +33,6 @@ const userSchema = new mongoose.Schema(
 
     objective: {
       type: String,
-      enum: ["Fun", "Practice", "Improve Game"],
     },
 
     play_time: {
@@ -132,6 +131,13 @@ const userSchema = new mongoose.Schema(
     img: {
       type: String,
     },
+
+    connections: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     tokens: [
       {
         token: {
