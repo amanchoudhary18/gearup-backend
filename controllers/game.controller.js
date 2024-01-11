@@ -62,6 +62,18 @@ exports.getMyGames = async (req, res) => {
       .map((game) => ({
         ...game._doc,
         isHost: String(req.user._id) === String(game.player1._id),
+        player1: {
+          _id: game.player1._id,
+          name: `${game.player1.first_name ? game.player1.first_name : ""} ${
+            game.player1.last_name ? game.player1.last_name : ""
+          }`.trim(),
+        },
+        player2: {
+          _id: game.player2._id,
+          name: `${game.player2.first_name ? game.player2.first_name : ""} ${
+            game.player2.last_name ? game.player2.last_name : ""
+          }`.trim(),
+        },
 
         status: "Recent",
       }));
@@ -78,6 +90,18 @@ exports.getMyGames = async (req, res) => {
       .map((game) => ({
         ...game._doc,
         isHost: String(req.user._id) === String(game.player1._id),
+        player1: {
+          _id: game.player1._id,
+          name: `${game.player1.first_name ? game.player1.first_name : ""} ${
+            game.player1.last_name ? game.player1.last_name : ""
+          }`.trim(),
+        },
+        player2: {
+          _id: game.player2._id,
+          name: `${game.player2.first_name ? game.player2.first_name : ""} ${
+            game.player2.last_name ? game.player2.last_name : ""
+          }`.trim(),
+        },
 
         status: "Live",
       }));
@@ -87,6 +111,18 @@ exports.getMyGames = async (req, res) => {
       .map((game) => ({
         ...game._doc,
         isHost: String(req.user._id) === String(game.player1._id),
+        player1: {
+          _id: game.player1._id,
+          name: `${game.player1.first_name ? game.player1.first_name : ""} ${
+            game.player1.last_name ? game.player1.last_name : ""
+          }`.trim(),
+        },
+        player2: {
+          _id: game.player2._id,
+          name: `${game.player2.first_name ? game.player2.first_name : ""} ${
+            game.player2.last_name ? game.player2.last_name : ""
+          }`.trim(),
+        },
 
         status: "Upcoming",
       }));
@@ -122,6 +158,18 @@ exports.getRecentGames = async (req, res) => {
       .map((game) => ({
         ...game._doc,
         isHost: String(req.user._id) === String(game.player1._id),
+        player1: {
+          _id: game.player1._id,
+          name: `${game.player1.first_name ? game.player1.first_name : ""} ${
+            game.player1.last_name ? game.player1.last_name : ""
+          }`.trim(),
+        },
+        player2: {
+          _id: game.player2._id,
+          name: `${game.player2.first_name ? game.player2.first_name : ""} ${
+            game.player2.last_name ? game.player2.last_name : ""
+          }`.trim(),
+        },
 
         status: "Recent",
       }));
@@ -156,6 +204,18 @@ exports.getLiveGames = async (req, res) => {
       .map((game) => ({
         ...game._doc,
         isHost: String(req.user._id) === String(game.player1._id),
+        player1: {
+          _id: game.player1._id,
+          name: `${game.player1.first_name ? game.player1.first_name : ""} ${
+            game.player1.last_name ? game.player1.last_name : ""
+          }`.trim(),
+        },
+        player2: {
+          _id: game.player2._id,
+          name: `${game.player2.first_name ? game.player2.first_name : ""} ${
+            game.player2.last_name ? game.player2.last_name : ""
+          }`.trim(),
+        },
 
         status: "Live",
       }));
@@ -183,6 +243,18 @@ exports.getUpcomingGames = async (req, res) => {
       .map((game) => ({
         ...game._doc,
         isHost: String(req.user._id) === String(game.player1._id),
+        player1: {
+          _id: game.player1._id,
+          name: `${game.player1.first_name ? game.player1.first_name : ""} ${
+            game.player1.last_name ? game.player1.last_name : ""
+          }`.trim(),
+        },
+        player2: {
+          _id: game.player2._id,
+          name: `${game.player2.first_name ? game.player2.first_name : ""} ${
+            game.player2.last_name ? game.player2.last_name : ""
+          }`.trim(),
+        },
 
         status: "Upcoming",
       }));
