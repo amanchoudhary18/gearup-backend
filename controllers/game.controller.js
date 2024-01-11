@@ -61,6 +61,8 @@ exports.getMyGames = async (req, res) => {
       })
       .map((game) => ({
         ...game._doc,
+        isHost: String(req.user._id) === String(game.player1._id),
+
         status: "Recent",
       }));
 
@@ -75,6 +77,8 @@ exports.getMyGames = async (req, res) => {
       })
       .map((game) => ({
         ...game._doc,
+        isHost: String(req.user._id) === String(game.player1._id),
+
         status: "Live",
       }));
 
@@ -82,6 +86,8 @@ exports.getMyGames = async (req, res) => {
       .filter((game) => game.matchDate > currentDate)
       .map((game) => ({
         ...game._doc,
+        isHost: String(req.user._id) === String(game.player1._id),
+
         status: "Upcoming",
       }));
 
@@ -115,6 +121,8 @@ exports.getRecentGames = async (req, res) => {
       })
       .map((game) => ({
         ...game._doc,
+        isHost: String(req.user._id) === String(game.player1._id),
+
         status: "Recent",
       }));
 
@@ -147,6 +155,8 @@ exports.getLiveGames = async (req, res) => {
       })
       .map((game) => ({
         ...game._doc,
+        isHost: String(req.user._id) === String(game.player1._id),
+
         status: "Live",
       }));
 
@@ -172,6 +182,8 @@ exports.getUpcomingGames = async (req, res) => {
       .filter((game) => game.matchDate > currentDate)
       .map((game) => ({
         ...game._doc,
+        isHost: String(req.user._id) === String(game.player1._id),
+
         status: "Upcoming",
       }));
 

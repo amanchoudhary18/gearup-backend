@@ -1,19 +1,27 @@
 require("dotenv").config({ path: ".env" });
 const express = require("express");
 const mongoose = require("mongoose");
-const axios = require("axios");
-const path = require("path");
 const cors = require("cors");
+const path = require("path");
+const app = express();
+const http = require("http").Server(app);
+const io = require("socket.io")(http);
 
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to MongoDB"));
 
-const app = express();
-
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+
+app.get("/api/v1/testSocket", async (req, res) => {
+  const options = {
+    root: path.join(__dirname),
+  };
+  const fileName = "index.html";
+  res.sendFile(fileName, options);
+});
 
 app.get("/api/v1/home", async (req, res) => {
   res.send("Welcome to Gear Up");
@@ -34,6 +42,22 @@ app.use("/api/v1/game", gameRouter);
 const connectionRouter = require("./routes/connection.route");
 app.use("/api/v1/connection", connectionRouter);
 
-app.listen(process.env.PORT, () => {
+var users = 0;
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
+  users++;
+
+  io.sockets.emit("broadcast", { message: users + " users connected!" });
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected");
+    users--;
+
+    io.sockets.emit("broadcast", { message: users + " users connected!" });
+  });
+});
+
+http.listen(process.env.PORT, () => {
   console.log(`Server started on ${process.env.PORT}`);
 });
