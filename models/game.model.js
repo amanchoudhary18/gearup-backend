@@ -58,6 +58,7 @@ const gameSchema = new mongoose.Schema({
     winner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
   },
 
