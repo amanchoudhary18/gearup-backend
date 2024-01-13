@@ -286,19 +286,22 @@ exports.updateGame = async (req, res) => {
       if (!game.scorecard.updated && req.body.scorecard) {
         game.scorecard = req.body.scorecard;
         game.scorecard.updated = true;
+        game.scorecard.matchesPlayed =
+          game.scorecard.matchesWonByPlayer1 +
+          game.scorecard.matchesWonByPlayer2 +
+          game.scorecard.matchesDrawn;
+
+        game.scorecard.winner =
+          game.scorecard.matchesWonByPlayer1 >
+          game.scorecard.matchesWonByPlayer2
+            ? game.player1
+            : game.player2;
       }
 
       if (!game.player1Feedback.updated && req.body.player1Feedback) {
         game.player1Feedback = req.body.player1Feedback;
         game.player1Feedback.updated = true;
       }
-
-      game.matchesWonByPlayer2 =
-        req.body.matchesWonByPlayer2 || game.matchesWonByPlayer2;
-      game.matchesDrawn = req.body.matchesDrawn || game.matchesDrawn;
-
-      game.matchesPlayed =
-        game.matchesWonByPlayer1 + game.matchesWonByPlayer2 + game.matchesDrawn;
     } else {
       if (!game.player2Feedback.updated && req.body.player2Feedback) {
         game.player2Feedback = req.body.player2Feedback;
