@@ -75,6 +75,11 @@ exports.getMyGames = async (req, res) => {
           }`.trim(),
         },
 
+        // status:
+        //   game.checked_in.player1 && game.checked_in.player2
+        //     ? "Recent"
+        //     : "Game Cancelled",
+
         status: "Recent",
       }));
 
@@ -170,6 +175,11 @@ exports.getRecentGames = async (req, res) => {
             game.player2.last_name ? game.player2.last_name : ""
           }`.trim(),
         },
+
+        //  status:
+        //     game.checked_in.player1 && game.checked_in.player2
+        //       ? "Recent"
+        //       : "Game Cancelled",
 
         status: "Recent",
       }));
@@ -302,11 +312,16 @@ exports.updateGame = async (req, res) => {
         game.player1Feedback = req.body.player1Feedback;
         game.player1Feedback.updated = true;
       }
+      if (!game.checked_in.player1)
+        game.checked_in.player1 = req.body.checked_in.player1;
     } else {
       if (!game.player2Feedback.updated && req.body.player2Feedback) {
         game.player2Feedback = req.body.player2Feedback;
         game.player2Feedback.updated = true;
       }
+
+      if (!game.checked_in.player2)
+        game.checked_in.player2 = req.body.checked_in.player2;
     }
 
     const updatedGame = await game.save();

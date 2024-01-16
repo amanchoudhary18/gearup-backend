@@ -42,21 +42,11 @@ app.use("/api/v1/game", gameRouter);
 const connectionRouter = require("./routes/connection.route");
 app.use("/api/v1/connection", connectionRouter);
 
-var users = 0;
+const chatRouter = require("./routes/chat.route");
+app.use("/api/v1/chat", chatRouter);
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
-  users++;
-
-  io.sockets.emit("broadcast", { message: users + " users connected!" });
-
-  socket.on("disconnect", () => {
-    console.log("A user disconnected");
-    users--;
-
-    io.sockets.emit("broadcast", { message: users + " users connected!" });
-  });
-});
+const messageRouter = require("./routes/message.route");
+app.use("/api/v1/message", messageRouter);
 
 http.listen(process.env.PORT, () => {
   console.log(`Server started on ${process.env.PORT}`);

@@ -119,10 +119,12 @@ const userSchema = new mongoose.Schema(
 
     bio: {
       type: String,
+      default: null,
     },
 
     profession: {
       type: String,
+      default: null,
     },
 
     bucks: {
@@ -139,6 +141,26 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+
+    social_media: {
+      instagram: {
+        type: String,
+        default: null,
+      },
+      facebook: {
+        type: String,
+        default: null,
+      },
+      linkedin: {
+        type: String,
+        default: null,
+      },
+      youtube: {
+        type: String,
+        default: null,
+      },
+    },
+
     tokens: [
       {
         token: {

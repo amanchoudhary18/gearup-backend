@@ -3,6 +3,8 @@ const generateOTP = require("../utils/generateOTP");
 const OtpModel = require("../models/otp.model");
 require("dotenv").config({ path: "../.env" });
 const referralCodeGenerator = require("referral-code-generator");
+const Connection = require("../models/connection.model");
+const Game = require("../models/game.model");
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   var R = 6371;
@@ -22,6 +24,48 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 
 function deg2rad(deg) {
   return deg * (Math.PI / 180);
+}
+
+async function calculateRating(userId) {
+  try {
+    const gamesAsPlayer1 = await Game.find({ player1: userId });
+
+    const gamesAsPlayer2 = await Game.find({ player2: userId });
+
+    let score = 0;
+    let games = 0;
+
+    gamesAsPlayer1.forEach((game) => {
+      if (game.player2Feedback.updated) {
+        games++;
+        score +=
+          game.player2Feedback.punctuality +
+          game.player2Feedback.sportsmanship +
+          game.player2Feedback.teamPlayer +
+          game.player2Feedback.competitiveness +
+          game.player2Feedback.respectful;
+      }
+    });
+
+    gamesAsPlayer2.forEach((game) => {
+      if (game.player1Feedback.updated) {
+        games++;
+        score +=
+          game.player1Feedback.punctuality +
+          game.player1Feedback.sportsmanship +
+          game.player1Feedback.teamPlayer +
+          game.player1Feedback.competitiveness +
+          game.player1Feedback.respectful;
+      }
+    });
+
+    const rating = games > 0 ? score / (games * 2) : null;
+
+    return rating;
+  } catch (error) {
+    console.error("Error calculating rating:", error);
+    throw error;
+  }
 }
 
 //register function
@@ -133,6 +177,7 @@ exports.update = async (req, res) => {
     "profession",
     "current_address",
     "img",
+    "social_media",
   ];
 
   const updateFields = Object.fromEntries(
@@ -173,7 +218,37 @@ exports.mydata = async (req, res) => {
         .send({ status: "Failed", message: "User not found" });
     }
 
-    res.status(200).send({ status: "Successful", user });
+    res.status(200).send({
+      status: "Successful",
+      user: {
+        ...user._doc,
+        rating: await calculateRating(user._id),
+        ratings: [
+          {
+            name: "George",
+            img: null,
+            review_message: "What a playa!",
+            rating: 4,
+            review_date: 1705392336000,
+          },
+        ],
+
+        game_stats: [
+          {
+            sport_id: "659ae820fc7fd9bad6fe0dc9",
+            matches_played: 7,
+            matches_won: 0,
+            level: "Beginner",
+          },
+          {
+            sport_id: "659ae8d6f919dd254d788b26",
+            matches_played: null,
+            matches_won: null,
+            level: null,
+          },
+        ],
+      },
+    });
   } catch (error) {
     res.status(500).send({ status: "Failed", message: error.message });
   }
@@ -199,10 +274,9 @@ exports.getPlayers = async (req, res) => {
         const ageDate = new Date(Date.now() - birthday.getTime());
         const age = Math.abs(ageDate.getUTCFullYear() - 1970);
 
-        return { user, distance, age };
+        return { ...user._doc, distance, age };
       }
-
-      return { user, distance };
+      return { ...user._doc, distance };
     });
 
     playersWithDistances.sort((a, b) => a.distance - b.distance);
@@ -211,7 +285,43 @@ exports.getPlayers = async (req, res) => {
       player.distance = Number(player.distance.toFixed(2));
     });
 
-    res.status(200).json({ status: "Successful", playersWithDistances });
+    const playersWithConnections = await Promise.all(
+      playersWithDistances.map(async (player) => {
+        const connection = await Connection.findOne({
+          $or: [
+            { sender: currentUser._id, receiver: player._id },
+            { sender: player._id, receiver: currentUser._id },
+          ],
+        });
+        const rating = await calculateRating(player._id);
+        if (connection) {
+          return {
+            ...player,
+            rating,
+            connection_data: {
+              connection: true,
+              connection_status: connection.status,
+              isSender:
+                String(connection.sender) === String(req.user._id)
+                  ? true
+                  : false,
+            },
+          };
+        } else {
+          return {
+            ...player,
+            rating,
+            connection_data: {
+              connection: false,
+              connection_status: null,
+              isSender: null,
+            },
+          };
+        }
+      })
+    );
+
+    res.status(200).json({ status: "Successful", playersWithConnections });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
   }
@@ -257,9 +367,9 @@ exports.getFilteredPlayers = async (req, res) => {
           const ageDate = new Date(Date.now() - birthday.getTime());
           const age = Math.abs(ageDate.getUTCFullYear() - 1970);
 
-          return { user, distance, age };
+          return { ...user._doc, distance, age };
         }
-        return { user, distance };
+        return { ...user._doc, distance };
       })
       .filter((player) => player.distance <= range);
 
@@ -269,9 +379,45 @@ exports.getFilteredPlayers = async (req, res) => {
       player.distance = Number(player.distance.toFixed(2));
     });
 
+    const playersWithConnections = await Promise.all(
+      playersWithDistances.map(async (player) => {
+        const connection = await Connection.findOne({
+          $or: [
+            { sender: currentUser._id, receiver: player._id },
+            { sender: player._id, receiver: currentUser._id },
+          ],
+        });
+        const rating = await calculateRating(player._id);
+        if (connection) {
+          return {
+            ...player,
+            rating,
+            connection_data: {
+              connection: true,
+              connection_status: connection.status,
+              isSender:
+                String(connection.sender) === String(req.user._id)
+                  ? true
+                  : false,
+            },
+          };
+        } else {
+          return {
+            ...player,
+            rating,
+            connection_data: {
+              connection: false,
+              connection_status: null,
+              isSender: null,
+            },
+          };
+        }
+      })
+    );
+
     res
       .status(200)
-      .json({ status: "Successful", players: playersWithDistances });
+      .json({ status: "Successful", players: playersWithConnections });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
   }
@@ -280,7 +426,7 @@ exports.getFilteredPlayers = async (req, res) => {
 exports.getAnyPlayer = async (req, res) => {
   try {
     const userId = req.params.id;
-
+    const currentUserId = req.user._id;
     const user = await User.findOne({ _id: userId });
 
     if (!user) {
@@ -289,7 +435,58 @@ exports.getAnyPlayer = async (req, res) => {
         .send({ status: "Failed", message: "User not found" });
     }
 
-    res.status(200).send({ status: "Successful", user });
+    const connection = await Connection.findOne({
+      $or: [
+        { sender: currentUserId, receiver: userId },
+        { sender: userId, receiver: currentUserId },
+      ],
+    });
+
+    const connection_data = connection
+      ? {
+          connection: true,
+          connection_status: connection.status,
+          isSender:
+            String(connection.sender) === String(req.user._id) ? true : false,
+        }
+      : {
+          connection: false,
+          connection_status: null,
+          isSender: null,
+        };
+
+    res.status(200).send({
+      status: "Successful",
+      user: {
+        ...user._doc,
+        rating: await calculateRating(user._id),
+        connection_data,
+        ratings: [
+          {
+            name: "George",
+            img: null,
+            review_message: "What a playa!",
+            rating: 4,
+            review_date: 1705392336000,
+          },
+        ],
+
+        game_stats: [
+          {
+            sport_id: "659ae820fc7fd9bad6fe0dc9",
+            matches_played: 7,
+            matches_won: 0,
+            level: "Beginner",
+          },
+          {
+            sport_id: "659ae8d6f919dd254d788b26",
+            matches_played: null,
+            matches_won: null,
+            level: null,
+          },
+        ],
+      },
+    });
   } catch (error) {
     res.status(500).send({ status: "Failed", message: error.message });
   }

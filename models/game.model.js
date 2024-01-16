@@ -34,6 +34,17 @@ const gameSchema = new mongoose.Schema({
     required: true,
   },
 
+  checked_in: {
+    player1: {
+      type: Boolean,
+      default: false,
+    },
+    player2: {
+      type: Boolean,
+      default: false,
+    },
+  },
+
   scorecard: {
     matchesPlayed: {
       type: Number,
@@ -63,6 +74,11 @@ const gameSchema = new mongoose.Schema({
   },
 
   player1Feedback: {
+    rate_skills: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: null,
+    },
     punctuality: {
       type: Number,
       enum: [0, 1, 2],
@@ -100,6 +116,11 @@ const gameSchema = new mongoose.Schema({
   },
 
   player2Feedback: {
+    rate_skills: {
+      type: Number,
+      enum: [0, 1, 2],
+      default: null,
+    },
     punctuality: {
       type: Number,
       enum: [0, 1, 2],
