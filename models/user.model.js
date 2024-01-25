@@ -155,10 +155,15 @@ const userSchema = new mongoose.Schema(
         type: String,
         default: null,
       },
-      youtube: {
+      twitter: {
         type: String,
         default: null,
       },
+    },
+
+    posh_score: {
+      type: Number,
+      default: null,
     },
 
     tokens: [
