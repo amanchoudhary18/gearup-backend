@@ -16,10 +16,7 @@ router.post("/update", userAuth, UserController.update);
 router.get("/mydata", userAuth, UserController.mydata);
 
 // get nearby players
-router.get("/getPlayers", userAuth, UserController.getPlayers);
-
-// get filtered players
-router.get("/getFilteredPlayers", userAuth, UserController.getFilteredPlayers);
+router.post("/getPlayers", userAuth, UserController.getPlayers);
 
 // get any player
 router.get("/getAnyPlayer/:id", userAuth, UserController.getAnyPlayer);

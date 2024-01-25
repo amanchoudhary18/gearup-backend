@@ -5,6 +5,7 @@ require("dotenv").config({ path: "../.env" });
 const referralCodeGenerator = require("referral-code-generator");
 const Connection = require("../models/connection.model");
 const Game = require("../models/game.model");
+const sendOtp = require("../utils/sendOTP");
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   var R = 6371;
@@ -82,6 +83,8 @@ exports.register = async (req, res) => {
 
     const otpDb = new OtpModel(otpModel);
     const otpsave = await otpDb.save();
+
+    sendOtp(otp, mobileNumber);
 
     setTimeout(async () => {
       const otpupdate = await OtpModel.findOneAndUpdate(
@@ -178,6 +181,7 @@ exports.update = async (req, res) => {
     "current_address",
     "img",
     "social_media",
+    "posh_training",
   ];
 
   const updateFields = Object.fromEntries(
@@ -218,120 +222,61 @@ exports.mydata = async (req, res) => {
         .send({ status: "Failed", message: "User not found" });
     }
 
+    const birthday = new Date(user.birthday);
+    const ageDate = new Date(Date.now() - birthday.getTime());
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    const name = `${user.first_name} ${user.last_name ? user.last_name : ""}`;
+    const userData = {
+      ...user._doc,
+      name: name.trim(),
+      age,
+      rating: await calculateRating(user._id),
+
+      ratings: [
+        {
+          name: "George",
+          img: null,
+          review_message: "What a playa!",
+          rating: 4,
+          review_date: 1705392336000,
+        },
+      ],
+
+      game_stats: [
+        {
+          sport_id: "659ae820fc7fd9bad6fe0dc9",
+          matches_played: 7,
+          matches_won: 0,
+          level: "Beginner",
+        },
+        {
+          sport_id: "659ae8d6f919dd254d788b26",
+          matches_played: null,
+          matches_won: null,
+          level: null,
+        },
+      ],
+    };
+
+    delete userData.first_name;
+    delete userData.last_name;
+
     res.status(200).send({
       status: "Successful",
-      user: {
-        ...user._doc,
-        rating: await calculateRating(user._id),
-        ratings: [
-          {
-            name: "George",
-            img: null,
-            review_message: "What a playa!",
-            rating: 4,
-            review_date: 1705392336000,
-          },
-        ],
-
-        game_stats: [
-          {
-            sport_id: "659ae820fc7fd9bad6fe0dc9",
-            matches_played: 7,
-            matches_won: 0,
-            level: "Beginner",
-          },
-          {
-            sport_id: "659ae8d6f919dd254d788b26",
-            matches_played: null,
-            matches_won: null,
-            level: null,
-          },
-        ],
-      },
+      user: userData,
     });
   } catch (error) {
     res.status(500).send({ status: "Failed", message: error.message });
   }
 };
 
-// Get Players
+// Get Player with filters
+
 exports.getPlayers = async (req, res) => {
   try {
     const currentUser = req.user;
-
-    const allUsers = await User.find({ _id: { $ne: req.user._id } });
-
-    const playersWithDistances = allUsers.map((user) => {
-      const distance = getDistanceFromLatLonInKm(
-        user.current_address.lat,
-        user.current_address.lng,
-        currentUser.current_address.lat,
-        currentUser.current_address.lng
-      );
-
-      if (user.birthday) {
-        const birthday = new Date(user.birthday);
-        const ageDate = new Date(Date.now() - birthday.getTime());
-        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-
-        return { ...user._doc, distance, age };
-      }
-      return { ...user._doc, distance };
-    });
-
-    playersWithDistances.sort((a, b) => a.distance - b.distance);
-
-    playersWithDistances.forEach((player) => {
-      player.distance = Number(player.distance.toFixed(2));
-    });
-
-    const playersWithConnections = await Promise.all(
-      playersWithDistances.map(async (player) => {
-        const connection = await Connection.findOne({
-          $or: [
-            { sender: currentUser._id, receiver: player._id },
-            { sender: player._id, receiver: currentUser._id },
-          ],
-        });
-        const rating = await calculateRating(player._id);
-        if (connection) {
-          return {
-            ...player,
-            rating,
-            connection_data: {
-              connection: true,
-              connection_status: connection.status,
-              isSender:
-                String(connection.sender) === String(req.user._id)
-                  ? true
-                  : false,
-            },
-          };
-        } else {
-          return {
-            ...player,
-            rating,
-            connection_data: {
-              connection: false,
-              connection_status: null,
-              isSender: null,
-            },
-          };
-        }
-      })
-    );
-
-    res.status(200).json({ status: "Successful", playersWithConnections });
-  } catch (error) {
-    res.status(500).json({ status: "Failed", message: error.message });
-  }
-};
-
-// Get Player with filters
-exports.getFilteredPlayers = async (req, res) => {
-  try {
-    const currentUser = req.user;
-    const { gender, range, favouriteSport, favouriteSportLevel } = req.body;
+    const { gender, range, favouriteSport, favouriteSportLevel, max_age } =
+      req.body;
 
     let filter = { _id: { $ne: currentUser._id } };
 
@@ -339,19 +284,26 @@ exports.getFilteredPlayers = async (req, res) => {
       filter.gender = gender;
     }
 
-    if (favouriteSport) {
-      filter["favorite_sports.sport"] = favouriteSport;
+    if (favouriteSport && favouriteSportLevel) {
+      filter["favorite_sports"] = {
+        $elemMatch: {
+          sport: favouriteSport,
+          level: favouriteSportLevel,
+        },
+      };
     }
 
-    if (favouriteSportLevel) {
-      filter["favorite_sports.level"] = favouriteSportLevel;
-    }
-
-    if (!range) {
-      range = 10;
-    }
-
-    const allUsers = await User.find(filter);
+    const allUsers = await User.find(filter).select([
+      "img",
+      "first_name",
+      "last_name",
+      "age",
+      "gender",
+      "distance",
+      "favorite_sports",
+      "rating",
+      "birthday",
+    ]);
 
     const playersWithDistances = allUsers
       .map((user) => {
@@ -366,12 +318,20 @@ exports.getFilteredPlayers = async (req, res) => {
           const birthday = new Date(user.birthday);
           const ageDate = new Date(Date.now() - birthday.getTime());
           const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-
-          return { ...user._doc, distance, age };
+          const name = `${user.first_name} ${
+            user.last_name ? user.last_name : ""
+          }`;
+          return { ...user._doc, distance, age, name: name.trim() };
         }
-        return { ...user._doc, distance };
+        const name = `${user.first_name} ${
+          user.last_name ? user.last_name : ""
+        }`;
+
+        return { ...user._doc, distance, age: null, name: name.trim() };
       })
-      .filter((player) => player.distance <= range);
+      .filter((player) => (range ? player.distance <= range : true))
+      .filter((player) => (max_age ? player.age <= max_age : true))
+      .map(({ first_name, last_name, ...rest }) => rest);
 
     playersWithDistances.sort((a, b) => a.distance - b.distance);
 
@@ -454,38 +414,48 @@ exports.getAnyPlayer = async (req, res) => {
           connection_status: null,
           isSender: null,
         };
+    const birthday = new Date(user.birthday);
+    const ageDate = new Date(Date.now() - birthday.getTime());
+    const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+    const name = `${user.first_name} ${user.last_name ? user.last_name : ""}`;
+    const userData = {
+      ...user._doc,
+      name: name.trim(),
+      age,
+      rating: await calculateRating(user._id),
+      connection_data,
+      ratings: [
+        {
+          name: "George",
+          img: null,
+          review_message: "What a playa!",
+          rating: 4,
+          review_date: 1705392336000,
+        },
+      ],
+
+      game_stats: [
+        {
+          sport_id: "659ae820fc7fd9bad6fe0dc9",
+          matches_played: 7,
+          matches_won: 0,
+          level: "Beginner",
+        },
+        {
+          sport_id: "659ae8d6f919dd254d788b26",
+          matches_played: null,
+          matches_won: null,
+          level: null,
+        },
+      ],
+    };
+
+    delete userData.first_name;
+    delete userData.last_name;
 
     res.status(200).send({
       status: "Successful",
-      user: {
-        ...user._doc,
-        rating: await calculateRating(user._id),
-        connection_data,
-        ratings: [
-          {
-            name: "George",
-            img: null,
-            review_message: "What a playa!",
-            rating: 4,
-            review_date: 1705392336000,
-          },
-        ],
-
-        game_stats: [
-          {
-            sport_id: "659ae820fc7fd9bad6fe0dc9",
-            matches_played: 7,
-            matches_won: 0,
-            level: "Beginner",
-          },
-          {
-            sport_id: "659ae8d6f919dd254d788b26",
-            matches_played: null,
-            matches_won: null,
-            level: null,
-          },
-        ],
-      },
+      user: userData,
     });
   } catch (error) {
     res.status(500).send({ status: "Failed", message: error.message });
