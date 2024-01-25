@@ -3,7 +3,7 @@ const { default: axios } = require("axios");
 async function sendOtp(otp, number) {
   console.log(number);
   const smsBody = {
-    apikey: "dZ5RYJ9ro4sfjVes",
+    apikey: process.env.SMS_API_KEY,
     senderid: "MTAMOI",
     number: `+91${number}`,
     message: `Your OTP - One Time Password is ${otp} to authenticate your login with ${number}\n\nThanks, Gearup`,
