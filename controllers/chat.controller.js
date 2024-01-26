@@ -15,17 +15,38 @@ exports.accessChat = async (req, res) => {
         { users: { $elemMatch: { $eq: userId } } },
       ],
     })
-
-      .populate("users", "first_name last_name img ")
+      .populate({
+        path: "users",
+        select: "first_name last_name img",
+        options: {
+          transform: function (doc) {
+            doc.name = (doc.first_name + " " + doc.last_name).trim();
+            delete doc.first_name;
+            delete doc.last_name;
+            return doc;
+          },
+        },
+      })
       .populate("latestMessage");
 
     isChat = await User.populate(isChat, {
       path: "latestMessage.sender",
       select: "first_name last_name img ",
     });
-
     if (isChat.length > 0) {
-      res.status(200).send({ status: "Successful", chat: isChat[0] });
+      const chatData = isChat[0];
+
+      const chat = {
+        ...chatData._doc,
+        sender: chatData.users.filter(
+          (user) => user._id == String(req.user._id)
+        )[0],
+        receiver: chatData.users.filter((user) => user._id == userId)[0],
+      };
+
+      delete chat.users;
+
+      res.status(200).send({ status: "Successful", chat });
     } else {
       const chatData = {
         users: [req.user._id, userId],
@@ -37,7 +58,19 @@ exports.accessChat = async (req, res) => {
         _id: createdChat._id,
       }).populate("users", "first_name last_name img ");
 
-      res.status(200).send({ status: "Successful", chat: fullCreatedChat });
+      const fullChatData = fullCreatedChat;
+
+      const chat = {
+        ...fullChatData._doc,
+        sender: fullChatData.users.filter(
+          (user) => user._id == String(req.user._id)
+        )[0],
+        receiver: fullChatData.users.filter((user) => user._id == userId)[0],
+      };
+
+      delete chat.users;
+
+      res.status(200).send({ status: "Successful", chat });
     }
   } catch (err) {
     res.status(500).json({ status: "Failed", message: err.message });
@@ -49,13 +82,32 @@ exports.fetchChats = async (req, res) => {
     Chat.find({
       users: { $elemMatch: { $eq: req.user._id } },
     })
-      .populate("users", "first_name last_name img ")
+      .populate({
+        path: "users",
+        select: "first_name last_name img",
+        options: {
+          transform: function (doc) {
+            doc.name = (doc.first_name + " " + doc.last_name).trim();
+            delete doc.first_name;
+            delete doc.last_name;
+            return doc;
+          },
+        },
+      })
       .populate("latestMessage")
       .sort({ updatedAt: -1 })
       .then(async (results) => {
         results = await User.populate(results, {
           path: "latestMessage.sender",
           select: "first_name last_name img ",
+          options: {
+            transform: function (doc) {
+              doc.name = (doc.first_name + " " + doc.last_name).trim();
+              delete doc.first_name;
+              delete doc.last_name;
+              return doc;
+            },
+          },
         });
 
         res.status(200).json({ status: "Successful", chats: results });

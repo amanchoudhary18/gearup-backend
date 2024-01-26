@@ -26,7 +26,19 @@ exports.sendMessage = async (req, res) => {
 
     var message = await Message.create(newMessageBody);
 
-    message = await message.populate("sender", "first_name last_name img");
+    message = await message.populate({
+      path: "sender",
+      select: "first_name last_name img",
+      options: {
+        transform: function (doc) {
+          doc.name = (doc.first_name + " " + doc.last_name).trim();
+          delete doc.first_name;
+          delete doc.last_name;
+          return doc;
+        },
+      },
+    });
+
     message = message.populate("chat");
 
     message = await User.populate(message, {

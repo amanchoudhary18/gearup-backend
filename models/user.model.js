@@ -195,6 +195,11 @@ userSchema.methods.generateAuthToken = async function () {
 userSchema.methods.toJSON = function () {
   const user = this;
   const userObject = user.toObject();
+
+  userObject.name = `${userObject.first_name} ${userObject.last_name}`;
+  delete userObject.first_name;
+  delete userObject.last_name;
+
   delete userObject.tokens;
   return userObject;
 };
