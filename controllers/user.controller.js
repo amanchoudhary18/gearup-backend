@@ -261,6 +261,8 @@ exports.mydata = async (req, res) => {
     delete userData.first_name;
     delete userData.last_name;
 
+    delete userData.tokens;
+
     res.status(200).send({
       status: "Successful",
       user: userData,
@@ -452,6 +454,7 @@ exports.getAnyPlayer = async (req, res) => {
 
     delete userData.first_name;
     delete userData.last_name;
+    delete userData.tokens;
 
     res.status(200).send({
       status: "Successful",

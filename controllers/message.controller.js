@@ -43,12 +43,13 @@ exports.sendMessage = async (req, res) => {
 };
 
 exports.getMessages = async (req, res) => {
+  const { chatId } = req.params;
   try {
-    const sports = await Sport.find();
+    const messages = await Message.find({ chat: chatId });
+    console.log(messages);
     res.status(200).json({
       status: "Successful",
-      message: "Fetched all sports",
-      sports,
+      messages,
     });
   } catch (err) {
     res.status(500).json({ status: "Failed", message: err.message });

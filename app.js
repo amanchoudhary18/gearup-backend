@@ -4,8 +4,6 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
 const app = express();
-const http = require("http").Server(app);
-const io = require("socket.io")(http);
 
 mongoose
   .connect(process.env.MONGODB_URI)
@@ -48,6 +46,50 @@ app.use("/api/v1/chat", chatRouter);
 const messageRouter = require("./routes/message.route");
 app.use("/api/v1/message", messageRouter);
 
-http.listen(process.env.PORT, () => {
+const server = app.listen(process.env.PORT, () => {
   console.log(`Server started on ${process.env.PORT}`);
+});
+
+const io = require("socket.io")(server, {
+  pingTimeout: 60000,
+  cors: { origin: "*" },
+});
+
+io.on("connection", (socket) => {
+  console.log("connected to socket.io");
+
+  socket.on("setup", (userData) => {
+    socket.join(userData._id);
+    socket.emit("connected");
+  });
+
+  socket.on("join chat", (room) => {
+    socket.join(room);
+    console.log("User Joined Room: " + room);
+  });
+
+  socket.on("typing", (room) => {
+    socket.in(room).emit("typing");
+  });
+  s;
+
+  socket.on("stop typing", (room) => {
+    socket.in(room).emit("stop typing");
+  });
+
+  socket.on("new message", (newMessageReceived) => {
+    const chat = newMessageReceived.chat;
+    if (!chat.users) {
+      return console.log("chat.users not defined");
+    }
+
+    chat.users.forEach((user) => {
+      if (user._id == newMessageReceived.sender._id) return;
+
+      socket.in(user._id).emit("message received", newMessageReceived);
+    });
+
+    socket.join(room);
+    console.log("User Joined Room: " + room);
+  });
 });
