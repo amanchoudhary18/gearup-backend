@@ -295,7 +295,10 @@ exports.getPlayers = async (req, res) => {
       };
     }
 
-    const allUsers = await User.find(filter).select([
+    const allUsers = await User.find({
+      ...filter,
+      _id: { $nin: req.user.connections },
+    }).select([
       "img",
       "first_name",
       "last_name",
