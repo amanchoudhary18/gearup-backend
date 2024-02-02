@@ -20,7 +20,7 @@ const gameSchema = new mongoose.Schema({
   },
   duration: {
     type: Number,
-    default: 0, // Duration in minutes
+    default: 60, // Duration in minutes
   },
   sport: {
     type: mongoose.Schema.Types.ObjectId,
@@ -72,6 +72,21 @@ const gameSchema = new mongoose.Schema({
       default: null,
     },
   },
+
+  // status
+  gameStatus: {
+    type: String,
+    enum: ["Accepted", "Pending", "Cancelled"],
+    default: "Pending",
+  },
+
+  cancelledBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+
+  // feedback
 
   player1Feedback: {
     rate_skills: {

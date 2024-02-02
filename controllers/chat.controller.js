@@ -113,6 +113,12 @@ exports.fetchChats = async (req, res) => {
         const modifiedResults = results.map((result) => {
           const modifiedResult = {
             ...result._doc,
+            latestMessage: {
+              ...result._doc.latestMessage._doc,
+              createdAt: new Date(
+                result._doc.latestMessage.createdAt
+              ).getTime(),
+            },
             sender: result.users.filter(
               (user) => user._id == String(req.user._id)
             )[0],
@@ -120,7 +126,6 @@ exports.fetchChats = async (req, res) => {
               (user) => user._id != String(req.user._id)
             )[0],
           };
-
           delete modifiedResult.users;
           return modifiedResult;
         });

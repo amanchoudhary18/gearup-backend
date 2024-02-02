@@ -32,6 +32,7 @@ exports.sendMessage = async (req, res) => {
       options: {
         transform: function (doc) {
           doc.name = (doc.first_name + " " + doc.last_name).trim();
+          doc.createdAt = new Date(doc.createdAt).getTime();
           delete doc.first_name;
           delete doc.last_name;
           return doc;
@@ -57,11 +58,18 @@ exports.sendMessage = async (req, res) => {
 exports.getMessages = async (req, res) => {
   const { chatId } = req.params;
   try {
-    const messages = await Message.find({ chat: chatId });
+    const messages = await Message.find({ chat: chatId }).populate("game");
+
+    const modifiedMessages = messages.map((message) => {
+      return {
+        ...message._doc,
+        createdAt: new Date(message.createdAt).getTime(),
+      };
+    });
     console.log(messages);
     res.status(200).json({
       status: "Successful",
-      messages,
+      messages: modifiedMessages,
     });
   } catch (err) {
     res.status(500).json({ status: "Failed", message: err.message });

@@ -1,4 +1,6 @@
+const Chat = require("../models/chat.model");
 const Game = require("../models/game.model");
+const Message = require("../models/message.model");
 
 exports.createGame = async (req, res) => {
   try {
@@ -21,6 +23,24 @@ exports.createGame = async (req, res) => {
       venue,
     });
 
+    const isChat = await Chat.findOne({
+      $and: [
+        { users: { $elemMatch: { $eq: req.user._id } } },
+        { users: { $elemMatch: { $eq: player2 } } },
+      ],
+    });
+
+    if (!isChat) {
+      res.status(400).json({ status: "Failed", message: "Chat doesn't exist" });
+    }
+
+    const message = await Message.create({
+      sender: req.user._id,
+      chat: isChat._id,
+      isGame: true,
+      game: newGame._id,
+    });
+
     res.status(201).json({ status: "Success", game: newGame });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
@@ -29,7 +49,7 @@ exports.createGame = async (req, res) => {
 
 exports.getGames = async (req, res) => {
   try {
-    const games = await Game.find({})
+    const games = await Game.find({ gameStatus: "Accepted" })
       .populate("player1", "first_name last_name")
       .populate("player2", "first_name last_name")
       .populate("venue", "name location")
@@ -46,6 +66,7 @@ exports.getMyGames = async (req, res) => {
     const currentDate = Date.now();
     const games = await Game.find({
       $or: [{ player1: req.user._id }, { player2: req.user._id }],
+      gameStatus: "Accepted",
     })
       .populate("player1", "first_name last_name")
       .populate("player2", "first_name last_name")
@@ -147,6 +168,7 @@ exports.getRecentGames = async (req, res) => {
 
     let games = await Game.find({
       $or: [{ player1: req.user._id }, { player2: req.user._id }],
+      gameStatus: "Accepted",
     })
       .populate("player1", "first_name last_name")
       .populate("player2", "first_name last_name")
@@ -196,6 +218,7 @@ exports.getLiveGames = async (req, res) => {
 
     let games = await Game.find({
       $or: [{ player1: req.user._id }, { player2: req.user._id }],
+      gameStatus: "Accepted",
     })
       .populate("player1", "first_name last_name")
       .populate("player2", "first_name last_name")
@@ -242,6 +265,7 @@ exports.getUpcomingGames = async (req, res) => {
 
     let games = await Game.find({
       $or: [{ player1: req.user._id }, { player2: req.user._id }],
+      gameStatus: "Accepted",
     })
       .populate("player1", "first_name last_name")
       .populate("player2", "first_name last_name")
@@ -322,6 +346,12 @@ exports.updateGame = async (req, res) => {
 
       if (!game.checked_in.player2)
         game.checked_in.player2 = req.body.checked_in.player2;
+    }
+
+    if (req.body.gameStatus === "Cancelled" && !req.body.cancelledBy) {
+    } else {
+      game.gameStatus = req.body.gameStatus || game.gameStatus;
+      game.cancelledBy = req.body.cancelledBy || game.cancelledBy;
     }
 
     const updatedGame = await game.save();
