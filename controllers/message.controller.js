@@ -9,13 +9,21 @@ exports.sendMessage = async (req, res) => {
     if (!content) {
       res
         .status(400)
-        .send({ status: "Failed", message: "Message should not be empty" });
+        .json({ status: "Failed", message: "Message should not be empty" });
     }
 
     if (!chatId) {
       res
         .status(404)
-        .send({ status: "Failed", message: "Chat could not be found" });
+        .json({ status: "Failed", message: "Chat could not be found" });
+    }
+
+    const chat = await Chat.findOne({ _id: chatId });
+
+    if (!chat) {
+      res
+        .status(404)
+        .json({ status: "Failed", message: "Chat could not be found" });
     }
 
     const newMessageBody = {
@@ -63,7 +71,9 @@ exports.getMessages = async (req, res) => {
         .status(404)
         .send({ status: "Failed", message: "Chat could not be found" });
     }
-    const messages = await Message.find({ chat: chatId }).populate("game");
+    const messages = await Message.find({ chat: chatId })
+      .sort({ createdAt: -1 })
+      .populate("game");
 
     const modifiedMessages = messages.map((message) => {
       return {

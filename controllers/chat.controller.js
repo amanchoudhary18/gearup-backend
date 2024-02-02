@@ -20,6 +20,7 @@ exports.accessChat = async (req, res) => {
         select: "first_name last_name img",
         options: {
           transform: function (doc) {
+            console.log(doc);
             doc.name = (doc.first_name + " " + doc.last_name).trim();
             delete doc.first_name;
             delete doc.last_name;
@@ -33,6 +34,7 @@ exports.accessChat = async (req, res) => {
       path: "latestMessage.sender",
       select: "first_name last_name img ",
     });
+
     if (isChat.length > 0) {
       const chatData = isChat[0];
 
@@ -87,6 +89,7 @@ exports.fetchChats = async (req, res) => {
         select: "first_name last_name img",
         options: {
           transform: function (doc) {
+            console.log(doc);
             doc.name = (doc.first_name + " " + doc.last_name).trim();
             delete doc.first_name;
             delete doc.last_name;
@@ -102,6 +105,7 @@ exports.fetchChats = async (req, res) => {
           select: "first_name last_name img ",
           options: {
             transform: function (doc) {
+              console.log(doc);
               doc.name = (doc.first_name + " " + doc.last_name).trim();
               delete doc.first_name;
               delete doc.last_name;
@@ -112,17 +116,19 @@ exports.fetchChats = async (req, res) => {
 
         const modifiedResults = results.map((result) => {
           const modifiedResult = {
-            ...result._doc,
-            latestMessage: {
-              ...result._doc.latestMessage._doc,
-              createdAt: new Date(
-                result._doc.latestMessage.createdAt
-              ).getTime(),
-            },
-            sender: result.users.filter(
+            ...result?._doc,
+            latestMessage: result?._doc?.latestMessage
+              ? {
+                  ...result?._doc?.latestMessage?._doc,
+                  createdAt: new Date(
+                    result?._doc?.latestMessage?.createdAt
+                  ).getTime(),
+                }
+              : null,
+            sender: result?.users.filter(
               (user) => user._id == String(req.user._id)
             )[0],
-            receiver: result.users.filter(
+            receiver: result?.users.filter(
               (user) => user._id != String(req.user._id)
             )[0],
           };
