@@ -84,7 +84,11 @@ exports.register = async (req, res) => {
     const otpDb = new OtpModel(otpModel);
     const otpsave = await otpDb.save();
 
-    sendOtp(otp, mobileNumber);
+    try {
+      sendOtp(otp, mobileNumber);
+    } catch (error) {
+      console.log("OTP sent failed : ", error);
+    }
 
     setTimeout(async () => {
       const otpupdate = await OtpModel.findOneAndUpdate(

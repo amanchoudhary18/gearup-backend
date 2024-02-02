@@ -110,7 +110,22 @@ exports.fetchChats = async (req, res) => {
           },
         });
 
-        res.status(200).json({ status: "Successful", chats: results });
+        const modifiedResults = results.map((result) => {
+          const modifiedResult = {
+            ...result._doc,
+            sender: result.users.filter(
+              (user) => user._id == String(req.user._id)
+            )[0],
+            receiver: result.users.filter(
+              (user) => user._id != String(req.user._id)
+            )[0],
+          };
+
+          delete modifiedResult.users;
+          return modifiedResult;
+        });
+
+        res.status(200).json({ status: "Successful", chats: modifiedResults });
       });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: err.message });
