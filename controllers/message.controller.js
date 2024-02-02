@@ -58,6 +58,11 @@ exports.sendMessage = async (req, res) => {
 exports.getMessages = async (req, res) => {
   const { chatId } = req.params;
   try {
+    if (!chatId) {
+      res
+        .status(404)
+        .send({ status: "Failed", message: "Chat could not be found" });
+    }
     const messages = await Message.find({ chat: chatId }).populate("game");
 
     const modifiedMessages = messages.map((message) => {
