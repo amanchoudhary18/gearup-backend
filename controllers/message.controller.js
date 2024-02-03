@@ -73,7 +73,13 @@ exports.getMessages = async (req, res) => {
     }
     const messages = await Message.find({ chat: chatId })
       .sort({ createdAt: 1 })
-      .populate("game");
+      .populate({
+        path: "game",
+        populate: {
+          path: "venue",
+          model: "Venue",
+        },
+      });
 
     const modifiedMessages = messages.map((message) => {
       return {
