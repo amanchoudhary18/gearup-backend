@@ -17,13 +17,27 @@ exports.accessChat = async (req, res) => {
     })
       .populate({
         path: "users",
-        select: "first_name last_name img",
+        select: "first_name last_name img birthday current_address gender",
         options: {
           transform: function (doc) {
-            console.log(doc);
-            doc.name = (doc.first_name + " " + doc.last_name).trim();
+            let age = null;
+
+            if (doc.birthday) {
+              const birthday = new Date(doc.birthday);
+              const ageDate = new Date(Date.now() - birthday.getTime());
+              age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            }
+            doc.age = age;
+
+            doc = {
+              ...doc._doc,
+              age,
+              name: (doc.first_name + " " + doc.last_name).trim(),
+            };
+
             delete doc.first_name;
             delete doc.last_name;
+            delete doc.birthday;
             return doc;
           },
         },
@@ -58,7 +72,33 @@ exports.accessChat = async (req, res) => {
 
       const fullCreatedChat = await Chat.findOne({
         _id: createdChat._id,
-      }).populate("users", "first_name last_name img ");
+      }).populate({
+        path: "users",
+        select: "first_name last_name img birthday current_address gender",
+        options: {
+          transform: function (doc) {
+            let age = null;
+
+            if (doc.birthday) {
+              const birthday = new Date(doc.birthday);
+              const ageDate = new Date(Date.now() - birthday.getTime());
+              age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            }
+            doc.age = age;
+
+            doc = {
+              ...doc._doc,
+              age,
+              name: (doc.first_name + " " + doc.last_name).trim(),
+            };
+
+            delete doc.first_name;
+            delete doc.last_name;
+            delete doc.birthday;
+            return doc;
+          },
+        },
+      });
 
       const fullChatData = fullCreatedChat;
 
@@ -86,13 +126,27 @@ exports.fetchChats = async (req, res) => {
     })
       .populate({
         path: "users",
-        select: "first_name last_name img",
+        select: "first_name last_name img birthday current_address gender",
         options: {
           transform: function (doc) {
-            console.log(doc);
-            doc.name = (doc.first_name + " " + doc.last_name).trim();
+            let age = null;
+
+            if (doc.birthday) {
+              const birthday = new Date(doc.birthday);
+              const ageDate = new Date(Date.now() - birthday.getTime());
+              age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            }
+            doc.age = age;
+
+            doc = {
+              ...doc._doc,
+              age,
+              name: (doc.first_name + " " + doc.last_name).trim(),
+            };
+
             delete doc.first_name;
             delete doc.last_name;
+            delete doc.birthday;
             return doc;
           },
         },
