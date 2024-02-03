@@ -6,6 +6,12 @@ const referralCodeGenerator = require("referral-code-generator");
 const Connection = require("../models/connection.model");
 const Game = require("../models/game.model");
 const sendOtp = require("../utils/sendOTP");
+const Aws = require("aws-sdk");
+
+const s3 = new Aws.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_ACCESS_KEY_SECRET,
+});
 
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   var R = 6371;
@@ -97,16 +103,16 @@ exports.register = async (req, res) => {
       );
     }, 100000);
 
-    res.status(200).send({
+    res.status(200).json({
       status: "Successful",
       message: "otp sent",
       otpId: otpsave._id,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send({
+    res.status(500).json({
       status: "Failed",
-      message: "Failed to send OTP",
+      message: "Failed to json OTP",
     });
   }
 };
@@ -125,7 +131,7 @@ exports.otpverification = async (req, res) => {
 
       if (existingUser) {
         const token = await existingUser.generateAuthToken();
-        res.status(200).send({
+        res.status(200).json({
           status: "Successful",
           user: existingUser,
           token,
@@ -153,19 +159,19 @@ exports.otpverification = async (req, res) => {
         });
         await user.save();
         const token = await user.generateAuthToken();
-        res.status(200).send({
+        res.status(200).json({
           status: "Successful",
           user,
           token,
         });
       }
     } else {
-      res.status(200).send({ status: "Failed", message: "Wrong OTP entered" });
+      res.status(200).json({ status: "Failed", message: "Wrong OTP entered" });
     }
   } catch (error) {
     res
       .status(500)
-      .send({ status: "Failed", message: "Couldn't verify the OTP" });
+      .json({ status: "Failed", message: "Couldn't verify the OTP" });
   }
 };
 
@@ -198,20 +204,33 @@ exports.update = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .send({ status: "Failed", message: "User not found" });
+        .json({ status: "Failed", message: "User not found" });
     }
 
     if (updateFields.current_address) {
       user.addresses.push(updateFields.current_address);
     }
 
+    if (req.file) {
+      const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `profile_images/${req.user._id}_${Date.now()}.jpg`,
+        Body: req.file.buffer,
+        ACL: "public-read-write",
+        ContentType: req.file.mimetype,
+      };
+
+      const uploadResult = await s3.upload(params).promise();
+      updateFields.img = uploadResult.Location;
+    }
+
     Object.assign(user, updateFields);
     user.new_user = false;
     await user.save();
 
-    res.status(200).send({ status: "Successful", user });
+    res.status(200).json({ status: "Successful", user });
   } catch (error) {
-    res.status(500).send({ status: "Failed", message: error.message });
+    res.status(500).json({ status: "Failed", message: error.message });
   }
 };
 
@@ -223,7 +242,7 @@ exports.mydata = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .send({ status: "Failed", message: "User not found" });
+        .json({ status: "Failed", message: "User not found" });
     }
 
     const birthday = new Date(user.birthday);
@@ -267,12 +286,12 @@ exports.mydata = async (req, res) => {
 
     delete userData.tokens;
 
-    res.status(200).send({
+    res.status(200).json({
       status: "Successful",
       user: userData,
     });
   } catch (error) {
-    res.status(500).send({ status: "Failed", message: error.message });
+    res.status(500).json({ status: "Failed", message: error.message });
   }
 };
 
@@ -401,7 +420,7 @@ exports.getAnyPlayer = async (req, res) => {
     if (!user) {
       return res
         .status(404)
-        .send({ status: "Failed", message: "User not found" });
+        .json({ status: "Failed", message: "User not found" });
     }
 
     const connection = await Connection.findOne({
@@ -463,12 +482,12 @@ exports.getAnyPlayer = async (req, res) => {
     delete userData.last_name;
     delete userData.tokens;
 
-    res.status(200).send({
+    res.status(200).json({
       status: "Successful",
       user: userData,
     });
   } catch (error) {
-    res.status(500).send({ status: "Failed", message: error.message });
+    res.status(500).json({ status: "Failed", message: error.message });
   }
 };
 
@@ -483,8 +502,8 @@ exports.logout = async (req, res) => {
 
     res
       .status(200)
-      .send({ status: "Successful", message: "Logged out successfully" });
+      .json({ status: "Successful", message: "Logged out successfully" });
   } catch (error) {
-    res.status(500).send({ status: "Failed", message: error.message });
+    res.status(500).json({ status: "Failed", message: error.message });
   }
 };
