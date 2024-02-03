@@ -39,6 +39,8 @@ router.get("/getAnyPlayer/:id", userAuth, UserController.getAnyPlayer);
 // logout
 router.post("/logout", userAuth, UserController.logout);
 
+// verify-referral-code
+router.post("/verifyReferralCode", userAuth, UserController.verifyReferralCode);
 // // delete otp
 // router.get("/delete-otp", UserController.deleteInactiveOtps);
 

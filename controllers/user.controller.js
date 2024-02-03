@@ -507,3 +507,21 @@ exports.logout = async (req, res) => {
     res.status(500).json({ status: "Failed", message: error.message });
   }
 };
+
+// verify referral code
+exports.verifyReferralCode = async (req, res) => {
+  try {
+    const { referralCode } = req.body;
+
+    const user = await User.findOne({ referral_code: referralCode });
+    if (!user) {
+      res.status(200).json({ status: "Successful", verfied: false });
+    } else {
+      res
+        .status(200)
+        .json({ status: "Successful", verfied: true, referredBy: user });
+    }
+  } catch (error) {
+    res.status(500).json({ status: "Failed", message: error.message });
+  }
+};

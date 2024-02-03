@@ -61,6 +61,21 @@ exports.getGames = async (req, res) => {
   }
 };
 
+exports.getGame = async (req, res) => {
+  const { gameId } = req.params;
+  try {
+    const game = await Game.findOne({ _id: gameId })
+      .populate("player1", "first_name last_name")
+      .populate("player2", "first_name last_name")
+      .populate("venue", "name location")
+      .populate("sport", "name");
+
+    res.status(200).json({ status: "Success", game });
+  } catch (error) {
+    res.status(500).json({ status: "Failed", message: error.message });
+  }
+};
+
 exports.getMyGames = async (req, res) => {
   try {
     const currentDate = Date.now();

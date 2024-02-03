@@ -77,6 +77,7 @@ exports.getMessages = async (req, res) => {
         path: "game",
         populate: {
           path: "venue",
+          select: "name location",
           model: "Venue",
         },
       });

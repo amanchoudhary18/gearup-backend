@@ -9,6 +9,9 @@ router.post("/create", userAuth, GameController.createGame);
 // get games
 router.get("/games", userAuth, GameController.getGames);
 
+// game
+router.get("/game/:gameId", userAuth, GameController.getGame);
+
 // get my games
 router.get("/mygames", userAuth, GameController.getMyGames);
 
