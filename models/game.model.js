@@ -76,7 +76,7 @@ const gameSchema = new mongoose.Schema({
   // status
   gameStatus: {
     type: String,
-    enum: ["Accepted", "Pending", "Cancelled"],
+    enum: ["Accepted", "Pending", "Cancelled", "Declined"],
     default: "Pending",
   },
 

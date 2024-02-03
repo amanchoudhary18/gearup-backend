@@ -337,15 +337,15 @@ exports.updateGame = async (req, res) => {
         game.player1Feedback.updated = true;
       }
       console.log(game);
-      if (!game.checked_in.player1)
-        game.checked_in.player1 = req.body.checked_in?.player1;
+      if (!game.checked_in.player1 && req.body.checked_in)
+        game.checked_in.player1 = req.body.checked_in.player1;
     } else {
       if (!game.player2Feedback.updated && req.body.player2Feedback) {
         game.player2Feedback = req.body.player2Feedback;
         game.player2Feedback.updated = true;
       }
 
-      if (!game.checked_in.player2)
+      if (!game.checked_in.player2 && req.body.checked_in)
         game.checked_in.player2 = req.body.checked_in?.player2;
     }
 
