@@ -336,8 +336,9 @@ exports.updateGame = async (req, res) => {
         game.player1Feedback = req.body.player1Feedback;
         game.player1Feedback.updated = true;
       }
+      console.log(game);
       if (!game.checked_in.player1)
-        game.checked_in.player1 = req.body.checked_in.player1;
+        game.checked_in.player1 = req.body.checked_in?.player1;
     } else {
       if (!game.player2Feedback.updated && req.body.player2Feedback) {
         game.player2Feedback = req.body.player2Feedback;
@@ -345,7 +346,7 @@ exports.updateGame = async (req, res) => {
       }
 
       if (!game.checked_in.player2)
-        game.checked_in.player2 = req.body.checked_in.player2;
+        game.checked_in.player2 = req.body.checked_in?.player2;
     }
 
     if (req.body.gameStatus === "Cancelled" && !req.body.cancelledBy) {
@@ -358,6 +359,7 @@ exports.updateGame = async (req, res) => {
 
     res.status(200).json({ status: "Success", game: updatedGame });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ status: "Failed", message: error.message });
   }
 };
