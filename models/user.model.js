@@ -167,6 +167,10 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    notifications: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Notification" },
+    ],
+
     tokens: [
       {
         token: {

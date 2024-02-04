@@ -1,5 +1,6 @@
 const Chat = require("../models/chat.model");
 const Message = require("../models/message.model");
+const Notification = require("../models/notification.model");
 const User = require("../models/user.model");
 
 exports.sendMessage = async (req, res) => {
@@ -56,6 +57,25 @@ exports.sendMessage = async (req, res) => {
     });
 
     await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
+
+    const senderId = chat.users.filter(
+      (user) => String(user) == req.user._id
+    )[0];
+
+    const receiverId = chat.users.filter(
+      (user) => String(user) != req.user._id
+    )[0];
+
+    const notification = await Notification.create({
+      sender: senderId,
+      content: `${req.user.first_name} has sent you a message`,
+      type: "Sent Message",
+    });
+
+    const receiver = await User.findOne({ _id: receiverId });
+    receiver.notifications.push(notification);
+
+    await receiver.save();
 
     res.status(200).json({ status: "Successful", message });
   } catch (err) {

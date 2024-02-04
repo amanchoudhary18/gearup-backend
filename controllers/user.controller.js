@@ -7,6 +7,7 @@ const Connection = require("../models/connection.model");
 const Game = require("../models/game.model");
 const sendOtp = require("../utils/sendOTP");
 const Aws = require("aws-sdk");
+const Notification = require("../models/notification.model");
 
 const s3 = new Aws.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -521,6 +522,31 @@ exports.verifyReferralCode = async (req, res) => {
         .status(200)
         .json({ status: "Successful", verfied: true, referredBy: user });
     }
+  } catch (error) {
+    res.status(500).json({ status: "Failed", message: error.message });
+  }
+};
+
+// fetch Notifications
+exports.fetchNotifications = async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.user._id }).populate(
+      "notifications"
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: "Failed", message: "User not found" });
+    }
+
+    if (!user.notifications) {
+      return res.status(200).json({ status: "Successful", notifications: [] });
+    }
+
+    res
+      .status(200)
+      .json({ status: "Successful", notifications: user.notifications });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
   }

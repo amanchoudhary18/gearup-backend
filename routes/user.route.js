@@ -41,6 +41,9 @@ router.post("/logout", userAuth, UserController.logout);
 
 // verify-referral-code
 router.post("/verifyReferralCode", userAuth, UserController.verifyReferralCode);
+
+// fetchNotifications
+router.get("/notifications", userAuth, UserController.fetchNotifications);
 // // delete otp
 // router.get("/delete-otp", UserController.deleteInactiveOtps);
 

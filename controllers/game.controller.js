@@ -1,6 +1,8 @@
 const Chat = require("../models/chat.model");
 const Game = require("../models/game.model");
 const Message = require("../models/message.model");
+const Notification = require("../models/notification.model");
+const User = require("../models/user.model");
 
 exports.createGame = async (req, res) => {
   try {
@@ -40,6 +42,17 @@ exports.createGame = async (req, res) => {
       isGame: true,
       game: newGame._id,
     });
+
+    const notification = await Notification.create({
+      sender: req.user._id,
+      content: `${req.user.first_name} has sent you a game request`,
+      type: "Sent Game Request",
+    });
+
+    const receiver = await User.findOne({ _id: player2 });
+    receiver.notifications.push(notification);
+
+    await receiver.save();
 
     res.status(201).json({ status: "Success", game: newGame });
   } catch (error) {
