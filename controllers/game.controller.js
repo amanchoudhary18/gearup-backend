@@ -335,10 +335,11 @@ exports.updateGame = async (req, res) => {
       if (!game.scorecard.updated && req.body.scorecard) {
         game.scorecard = req.body.scorecard;
         game.scorecard.updated = true;
+
         game.scorecard.matchesPlayed =
           game.scorecard.matchesWonByPlayer1 +
-          game.scorecard.matchesWonByPlayer2 +
-          game.scorecard.matchesDrawn;
+          game.scorecard.matchesWonByPlayer2;
+        // + game.scorecard.matchesDrawn;
 
         game.scorecard.winner =
           game.scorecard.matchesWonByPlayer1 >
