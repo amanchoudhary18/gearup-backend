@@ -86,6 +86,12 @@ exports.getMessages = async (req, res) => {
       return {
         ...message._doc,
         createdAt: new Date(message.createdAt).getTime(),
+        game: !message.isGame
+          ? message.game
+          : {
+              ...message._doc.game._doc,
+              isHost: String(req.user._id) === String(message.game.player1._id),
+            },
       };
     });
     console.log(messages);

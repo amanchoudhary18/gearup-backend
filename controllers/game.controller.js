@@ -70,7 +70,12 @@ exports.getGame = async (req, res) => {
       .populate("venue", "name location")
       .populate("sport", "name");
 
-    res.status(200).json({ status: "Success", game });
+    const gameBody = {
+      ...game._doc,
+      isHost: String(req.user._id) === String(game.player1._id),
+    };
+
+    res.status(200).json({ status: "Success", game: gameBody });
   } catch (error) {
     res.status(500).json({ status: "Failed", message: error.message });
   }
@@ -367,7 +372,12 @@ exports.updateGame = async (req, res) => {
 
     const updatedGame = await game.save();
 
-    res.status(200).json({ status: "Success", game: updatedGame });
+    const updatedGameBody = {
+      ...updatedGame._doc,
+      isHost: String(req.user._id) === String(updatedGame.player1._id),
+    };
+
+    res.status(200).json({ status: "Success", game: updatedGameBody });
   } catch (error) {
     console.log(error);
     res.status(500).json({ status: "Failed", message: error.message });
