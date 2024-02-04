@@ -18,7 +18,7 @@ exports.createGame = async (req, res) => {
       sport,
       createdDate: Date.now(),
       matchDate,
-      duration,
+      duration: duration ? duration : 60,
       result: "Pending",
       venue,
     });
