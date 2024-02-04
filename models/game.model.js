@@ -120,8 +120,7 @@ const gameSchema = new mongoose.Schema({
       default: null,
     },
     reviewMessage: {
-      type: Number,
-      enum: [0, 1, 2],
+      type: String,
       default: null,
     },
     updated: {
@@ -162,8 +161,7 @@ const gameSchema = new mongoose.Schema({
       default: null,
     },
     reviewMessage: {
-      type: Number,
-      enum: [0, 1, 2],
+      type: String,
       default: null,
     },
     updated: {
