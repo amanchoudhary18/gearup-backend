@@ -346,7 +346,7 @@ exports.updateGame = async (req, res) => {
         game.player1Feedback = req.body.player1Feedback;
         game.player1Feedback.updated = true;
       }
-      x;
+
       if (!game.checked_in.player1 && req.body.checked_in)
         game.checked_in.player1 = req.body.checked_in.player1;
     } else {
