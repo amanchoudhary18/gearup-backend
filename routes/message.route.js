@@ -4,10 +4,10 @@ const router = express.Router();
 const MessageController = require("../controllers/message.controller");
 const userAuth = require("../middleware/userAuth");
 
-// create sports
+// send message
 router.post("/sendMessage", userAuth, MessageController.sendMessage);
 
-// get sports
-router.get("/getMessages/:chatId", userAuth, MessageController.getMessages);
+// get messages
+router.get("/getMessages/:id", userAuth, MessageController.getMessages);
 
 module.exports = router;

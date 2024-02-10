@@ -8,6 +8,8 @@ const Game = require("../models/game.model");
 const sendOtp = require("../utils/sendOTP");
 const Aws = require("aws-sdk");
 const Notification = require("../models/notification.model");
+const calculateAverageRating = require("../utils/calculateAverageRating");
+const getRecentReviewsForUser = require("../utils/recentReviewsForUser");
 
 const s3 = new Aws.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -239,6 +241,7 @@ exports.update = async (req, res) => {
 exports.mydata = async (req, res) => {
   try {
     const user = req.user;
+    const userId = req.user._id;
 
     if (!user) {
       return res
@@ -250,36 +253,71 @@ exports.mydata = async (req, res) => {
     const ageDate = new Date(Date.now() - birthday.getTime());
     const age = Math.abs(ageDate.getUTCFullYear() - 1970);
     const name = `${user.first_name} ${user.last_name ? user.last_name : ""}`;
+
+    const currentUser = await User.findOne({ _id: req.user._id });
+    const favoriteSports = currentUser.favorite_sports.map(
+      (favSport) => favSport.sport
+    );
+
+    // Fetch games based on the favorite sports
+    const games = await Game.find({
+      $or: [{ player1: userId }, { player2: userId }],
+      sport: { $in: favoriteSports },
+      gameStatus: "Accepted",
+      scorecard: { updated: true },
+    });
+
+    // Calculate total games played and total games won for each sport
+    const gameStats = favoriteSports.reduce((result, favSport) => {
+      const sportGames = games.filter((game) => game.sport.equals(favSport));
+
+      if (sportGames.length > 0) {
+        const gamesPlayed = sportGames.length;
+
+        const gamesWon = sportGames.reduce((total, game) => {
+          return total + (userId == game.scorecard.winner ? 1 : 0);
+        }, 0);
+
+        const totalAverageRating = sportGames.reduce((total, game) => {
+          const feedback = userId.equals(game.player1)
+            ? game.player2Feedback
+            : game.player1Feedback;
+          const gameRating = calculateAverageRating(feedback);
+          return total + gameRating;
+        }, 0);
+
+        const averageRating =
+          gamesPlayed > 0 ? totalAverageRating / gamesPlayed : null;
+
+        let level;
+        if (averageRating !== null) {
+          if (averageRating >= 0.5 && averageRating <= 1.5) {
+            level = "Beginner";
+          } else if (averageRating > 1.5 && averageRating <= 2) {
+            level = "Intermediate";
+          } else {
+            level = "Pro";
+          }
+        }
+
+        result.push({
+          sport_id: favSport,
+          matches_played: gamesPlayed,
+          matches_won: gamesWon,
+          rating: level,
+        });
+      }
+
+      return result;
+    }, []);
+
     const userData = {
       ...user._doc,
       name: name.trim(),
       age,
       rating: await calculateRating(user._id),
-
-      ratings: [
-        {
-          name: "George",
-          img: null,
-          review_message: "What a playa!",
-          rating: 4,
-          review_date: 1705392336000,
-        },
-      ],
-
-      game_stats: [
-        {
-          sport_id: "659ae820fc7fd9bad6fe0dc9",
-          matches_played: 7,
-          matches_won: 0,
-          level: "Beginner",
-        },
-        {
-          sport_id: "659ae8d6f919dd254d788b26",
-          matches_played: null,
-          matches_won: null,
-          level: null,
-        },
-      ],
+      ratings: getRecentReviewsForUser(user._id),
+      game_stats: gameStats,
     };
 
     delete userData.first_name;
@@ -447,36 +485,74 @@ exports.getAnyPlayer = async (req, res) => {
     const ageDate = new Date(Date.now() - birthday.getTime());
     const age = Math.abs(ageDate.getUTCFullYear() - 1970);
     const name = `${user.first_name} ${user.last_name ? user.last_name : ""}`;
+
+    const currentUser = await User.findOne({ _id: req.user._id });
+    const favoriteSports = currentUser.favorite_sports.map(
+      (favSport) => favSport.sport
+    );
+
+    // Fetch games based on the favorite sports
+    const games = await Game.find({
+      $or: [{ player1: userId }, { player2: userId }],
+      sport: { $in: favoriteSports },
+      gameStatus: "Accepted",
+      scorecard: { updated: true },
+    });
+
+    // Calculate total games played and total games won for each sport
+    const gameStats = favoriteSports.reduce((result, favSport) => {
+      const sportGames = games.filter((game) => game.sport.equals(favSport));
+
+      if (sportGames.length > 0) {
+        const gamesPlayed = sportGames.length;
+
+        const gamesWon = sportGames.reduce((total, game) => {
+          return total + (userId == game.scorecard.winner ? 1 : 0);
+        }, 0);
+
+        const totalAverageRating = sportGames.reduce((total, game) => {
+          const feedback = userId.equals(game.player1)
+            ? game.player2Feedback
+            : game.player1Feedback;
+          const gameRating = calculateAverageRating(feedback);
+          return total + gameRating;
+        }, 0);
+
+        const averageRating =
+          gamesPlayed > 0 ? totalAverageRating / gamesPlayed : null;
+
+        let level;
+        if (averageRating !== null) {
+          if (averageRating >= 0.5 && averageRating <= 1.5) {
+            level = "Beginner";
+          } else if (averageRating > 1.5 && averageRating <= 2) {
+            level = "Intermediate";
+          } else {
+            level = "Pro";
+          }
+        }
+
+        result.push({
+          sport_id: favSport,
+          matches_played: gamesPlayed,
+          matches_won: gamesWon,
+          rating: level,
+        });
+      }
+
+      return result;
+    }, []);
+
+    // user data
     const userData = {
       ...user._doc,
       name: name.trim(),
       age,
       rating: await calculateRating(user._id),
       connection_data,
-      ratings: [
-        {
-          name: "George",
-          img: null,
-          review_message: "What a playa!",
-          rating: 4,
-          review_date: 1705392336000,
-        },
-      ],
+      ratings: getRecentReviewsForUser(user._id),
 
-      game_stats: [
-        {
-          sport_id: "659ae820fc7fd9bad6fe0dc9",
-          matches_played: 7,
-          matches_won: 0,
-          level: "Beginner",
-        },
-        {
-          sport_id: "659ae8d6f919dd254d788b26",
-          matches_played: null,
-          matches_won: null,
-          level: null,
-        },
-      ],
+      game_stats: gameStats,
     };
 
     delete userData.first_name;

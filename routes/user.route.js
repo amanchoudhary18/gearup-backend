@@ -3,6 +3,8 @@ const userAuth = require("../middleware/userAuth");
 const router = express.Router();
 const UserController = require("../controllers/user.controller");
 const multer = require("multer");
+const User = require("../models/user.model");
+const BuckTransaction = require("../models/buckTransaction.model");
 
 const storage = multer.memoryStorage();
 
@@ -44,6 +46,30 @@ router.post("/verifyReferralCode", userAuth, UserController.verifyReferralCode);
 
 // fetchNotifications
 router.get("/notifications", userAuth, UserController.fetchNotifications);
+
+// fetchBucksTransactions
+
+router.get("/user/:userId/transactions", async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Fetch transactions for the user and populate the 'bucks' field
+    const transactions = await BuckTransaction.find({ user: userId }).populate(
+      "buckId"
+    );
+
+    res.status(200).json({ transactions });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 // // delete otp
 // router.get("/delete-otp", UserController.deleteInactiveOtps);
 

@@ -3,6 +3,7 @@ const Message = require("../models/message.model");
 const Notification = require("../models/notification.model");
 const User = require("../models/user.model");
 
+// send messages
 exports.sendMessage = async (req, res) => {
   try {
     const { content, chatId } = req.body;
@@ -83,15 +84,31 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
+// get messages by userId || chatId
 exports.getMessages = async (req, res) => {
-  const { chatId } = req.params;
+  const { id } = req.params;
   try {
-    if (!chatId) {
+    if (!id) {
       res
-        .status(404)
-        .send({ status: "Failed", message: "Chat could not be found" });
+        .status(400)
+        .json({ status: "Failed", message: "Null parameter passed" });
+
+      return;
     }
-    const messages = await Message.find({ chat: chatId })
+
+    let chat = await Chat.findOne({ _id: id });
+
+    if (!chat) {
+      const user = await User.findOne({ _id: id });
+      chat = await Chat.findOne({ users: [req.user._id, user._id] });
+    }
+
+    if (!chat) {
+      res.status(404).json({ status: "Failed", message: "Chat not found" });
+      return;
+    }
+
+    const messages = await Message.find({ chat: chat._id })
       .sort({ createdAt: 1 })
       .populate({
         path: "game",

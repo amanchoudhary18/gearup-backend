@@ -3,6 +3,11 @@ const Game = require("../models/game.model");
 const Message = require("../models/message.model");
 const Notification = require("../models/notification.model");
 const User = require("../models/user.model");
+const {
+  playedWith5,
+  feedbackUpdatedFor5,
+  feedbackReceivedFrom5,
+} = require("../utils/bucksCheck");
 
 exports.createGame = async (req, res) => {
   try {
@@ -344,6 +349,9 @@ exports.updateGame = async (req, res) => {
         .json({ status: "Failed", message: "Game not found" });
     }
 
+    const player1 = await User.findOne({ _id: game.player1 });
+    const player2 = await User.findOne({ _id: game.player2 });
+
     if (String(game.player1) === String(req.user._id)) {
       game.sport = req.body.sport || game.sport;
       game.matchDate = req.body.matchDate || game.matchDate;
@@ -363,24 +371,58 @@ exports.updateGame = async (req, res) => {
       if (!game.player1Feedback.updated && req.body.player1Feedback) {
         game.player1Feedback = req.body.player1Feedback;
         game.player1Feedback.updated = true;
+
+        if (feedbackUpdatedFor5(player1._id)) {
+          player1.handleBucksRewards("65c80247e788dc5e7faca357");
+        }
+
+        if (feedbackReceivedFrom5(player1._id)) {
+          player1.handleBucksRewards("65c80254e788dc5e7faca359");
+        }
       }
 
-      if (!game.checked_in.player1 && req.body.checked_in)
+      if (!game.checked_in.player1 && req.body.checked_in) {
+        if (req.body.checked_in.player1) {
+          player1.handleBucksRewards("65c8023ce788dc5e7faca355");
+        }
         game.checked_in.player1 = req.body.checked_in.player1;
+      }
     } else {
       if (!game.player2Feedback.updated && req.body.player2Feedback) {
         game.player2Feedback = req.body.player2Feedback;
         game.player2Feedback.updated = true;
+
+        if (feedbackUpdatedFor5(player2._id)) {
+          player2.handleBucksRewards("65c80247e788dc5e7faca357");
+        }
+
+        if (feedbackReceivedFrom5(player2._id)) {
+          player2.handleBucksRewards("65c80254e788dc5e7faca359");
+        }
       }
 
-      if (!game.checked_in.player2 && req.body.checked_in)
+      if (!game.checked_in.player2 && req.body.checked_in) {
+        if (req.body.checked_in.player1) {
+          player2.handleBucksRewards("65c8023ce788dc5e7faca355");
+        }
         game.checked_in.player2 = req.body.checked_in?.player2;
+      }
     }
 
     if (req.body.gameStatus === "Cancelled" && !req.body.cancelledBy) {
     } else {
       game.gameStatus = req.body.gameStatus || game.gameStatus;
       game.cancelledBy = req.body.cancelledBy || game.cancelledBy;
+
+      if (req.body.gameStatus === "Accepted") {
+        if (playedWith5(player1._id)) {
+          player1.handleBucksRewards("65c8021de788dc5e7faca353");
+        }
+
+        if (playedWith5(player2._id)) {
+          player2.handleBucksRewards("65c8021de788dc5e7faca353");
+        }
+      }
     }
 
     const updatedGame = await game.save();

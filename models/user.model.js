@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
+const Bucks = require("./buck.model");
 require("dotenv").config({ path: ".env" });
 
 console.log(process.env.JWT_SECRET);
@@ -132,6 +133,19 @@ const userSchema = new mongoose.Schema(
       default: 100,
     },
 
+    bucks_tasks: [
+      {
+        bucks_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Bucks",
+        },
+        completed: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
+
     img: {
       type: String,
     },
@@ -207,6 +221,42 @@ userSchema.methods.toJSON = function () {
 
   delete userObject.tokens;
   return userObject;
+};
+
+userSchema.methods.handleBucksRewards = async function (bucksTaskId) {
+  const user = this;
+
+  const task = await Bucks.findById(bucksTaskId);
+
+  if (!task) {
+    return;
+  }
+
+  const existingTask = user.bucks_tasks.find(
+    (task) => String(task.bucks_id) === String(bucksTaskId)
+  );
+
+  if (!existingTask) {
+    user.bucks_tasks.push({ bucks_id: bucksTaskId, completed: 1 });
+    user.bucks += task.reward;
+    await BuckTransaction.create({
+      user: user._id,
+      buckId: bucksTaskId,
+      date: Math.floor(Date.now() / 1000),
+    });
+    await user.save();
+  } else if (task.limit === -1 || existingTask.completed < task.limit) {
+    existingTask.completed++;
+    user.bucks += task.reward;
+
+    await BuckTransaction.create({
+      user: user._id,
+      buckId: bucksTaskId,
+      date: Math.floor(Date.now() / 1000),
+    });
+
+    await user.save();
+  }
 };
 
 const User = mongoose.model("User", userSchema);
