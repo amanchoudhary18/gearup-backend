@@ -36,21 +36,21 @@ exports.sendMessage = async (req, res) => {
 
     var message = await Message.create(newMessageBody);
 
-    message = await message.populate({
-      path: "sender",
-      select: "first_name last_name img",
-      options: {
-        transform: function (doc) {
-          doc.name = (doc.first_name + " " + doc.last_name).trim();
-          doc.createdAt = new Date(doc.createdAt).getTime();
-          delete doc.first_name;
-          delete doc.last_name;
-          return doc;
-        },
-      },
-    });
+    // message = await message.populate({
+    //   path: "sender",
+    //   select: "first_name last_name img",
+    //   options: {
+    //     transform: function (doc) {
+    //       doc.name = (doc.first_name + " " + doc.last_name).trim();
+    //       doc.createdAt = new Date(doc.createdAt).getTime();
+    //       delete doc.first_name;
+    //       delete doc.last_name;
+    //       return doc;
+    //     },
+    //   },
+    // });
 
-    message = message.populate("chat");
+    // message = message.populate("chat");
 
     message = await User.populate(message, {
       path: "chat.users",
@@ -77,6 +77,11 @@ exports.sendMessage = async (req, res) => {
     receiver.notifications.push(notification);
 
     await receiver.save();
+
+    message = {
+      ...message._doc,
+      createdAt: new Date(message.createdAt).getTime(),
+    };
 
     res.status(200).json({ status: "Successful", message });
   } catch (err) {
@@ -131,7 +136,7 @@ exports.getMessages = async (req, res) => {
             },
       };
     });
-    console.log(messages);
+    // console.log(messages);
     res.status(200).json({
       status: "Successful",
       messages: modifiedMessages,

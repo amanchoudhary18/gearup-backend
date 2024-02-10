@@ -45,6 +45,7 @@ const chatRouter = require("./routes/chat.route");
 app.use("/api/v1/chat", chatRouter);
 
 const messageRouter = require("./routes/message.route");
+const Chat = require("./models/chat.model");
 app.use("/api/v1/message", messageRouter);
 
 const bucksRouter = require("./routes/bucks.route");
@@ -96,8 +97,6 @@ io.on("connection", (socket) => {
       if (user != newMessageReceived.sender) {
         return;
       }
-
-      console.log(user);
 
       socket.in(user.toString()).emit("message received", newMessageReceived);
     });
