@@ -340,12 +340,12 @@ exports.mydata = async (req, res) => {
 
 exports.getPlayers = async (req, res) => {
   try {
-    const currentUser = req.user._id;
+    const currentUser = req.user;
     console.log(currentUser);
     const { gender, range, favouriteSport, favouriteSportLevel, max_age } =
       req.body;
 
-    let filter = { _id: { $ne: currentUser._id } };
+    let filter = {};
 
     if (gender && gender !== "All") {
       filter.gender = gender;
@@ -362,7 +362,7 @@ exports.getPlayers = async (req, res) => {
 
     const allUsers = await User.find({
       ...filter,
-      _id: { $nin: req.user.connections },
+      _id: { $nin: [...currentUser.connections, currentUser._id] },
     }).select([
       "img",
       "first_name",
@@ -375,13 +375,15 @@ exports.getPlayers = async (req, res) => {
       "birthday",
     ]);
 
+    console.log(allUsers);
+
     const playersWithDistances = allUsers
       .map((user) => {
         const distance = getDistanceFromLatLonInKm(
-          user.current_address.lat,
-          user.current_address.lng,
-          currentUser.current_address.lat,
-          currentUser.current_address.lng
+          user.current_address?.lat,
+          user.current_address?.lng,
+          currentUser.current_address?.lat,
+          currentUser.current_address?.lng
         );
 
         if (user.birthday) {
