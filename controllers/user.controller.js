@@ -227,7 +227,15 @@ exports.update = async (req, res) => {
 
     // check lat lng before adding
     if (updateFields.current_address) {
-      user.addresses.push(updateFields.current_address);
+      const isNewAddress = !user.addresses.some(
+        (address) =>
+          address.lat === updateFields.current_address.lat &&
+          address.lng === updateFields.current_address.lng
+      );
+
+      if (isNewAddress) {
+        user.addresses.push(updateFields.current_address);
+      }
     }
 
     user.new_user = false;
@@ -374,8 +382,6 @@ exports.getPlayers = async (req, res) => {
       "rating",
       "birthday",
     ]);
-
-    console.log(allUsers);
 
     const playersWithDistances = allUsers
       .map((user) => {
