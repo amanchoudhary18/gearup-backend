@@ -140,8 +140,8 @@ const userSchema = new mongoose.Schema(
           ref: "Bucks",
         },
         completed: {
-          type: Boolean,
-          default: false,
+          type: Number,
+          default: 0,
         },
       },
     ],

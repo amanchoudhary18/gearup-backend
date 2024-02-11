@@ -210,10 +210,6 @@ exports.update = async (req, res) => {
         .json({ status: "Failed", message: "User not found" });
     }
 
-    if (updateFields.current_address) {
-      user.addresses.push(updateFields.current_address);
-    }
-
     if (req.file) {
       const params = {
         Bucket: process.env.S3_BUCKET_NAME,
@@ -228,6 +224,12 @@ exports.update = async (req, res) => {
     }
 
     Object.assign(user, updateFields);
+
+    // check lat lng before adding
+    if (updateFields.current_address) {
+      user.addresses.push(updateFields.current_address);
+    }
+
     user.new_user = false;
     await user.save();
 
@@ -338,11 +340,12 @@ exports.mydata = async (req, res) => {
 
 exports.getPlayers = async (req, res) => {
   try {
-    const currentUser = req.user;
+    const currentUser = req.user._id;
+    console.log(currentUser);
     const { gender, range, favouriteSport, favouriteSportLevel, max_age } =
       req.body;
 
-    let filter = { _id: { $ne: currentUser._id } };
+    let filter = {};
 
     if (gender && gender !== "All") {
       filter.gender = gender;
@@ -360,17 +363,19 @@ exports.getPlayers = async (req, res) => {
     const allUsers = await User.find({
       ...filter,
       _id: { $nin: req.user.connections },
-    }).select([
-      "img",
-      "first_name",
-      "last_name",
-      "age",
-      "gender",
-      "distance",
-      "favorite_sports",
-      "rating",
-      "birthday",
-    ]);
+    })
+      .select([
+        "img",
+        "first_name",
+        "last_name",
+        "age",
+        "gender",
+        "distance",
+        "favorite_sports",
+        "rating",
+        "birthday",
+      ])
+      .filter((user) => user._id != req.user._id);
 
     const playersWithDistances = allUsers
       .map((user) => {

@@ -48,9 +48,8 @@ router.post("/verifyReferralCode", userAuth, UserController.verifyReferralCode);
 router.get("/notifications", userAuth, UserController.fetchNotifications);
 
 // fetchBucksTransactions
-
-router.get("/user/:userId/transactions", async (req, res) => {
-  const userId = req.params.userId;
+router.get("/bucksTransactions", userAuth, async (req, res) => {
+  const userId = req.user._id;
 
   try {
     const user = await User.findById(userId);
