@@ -345,7 +345,7 @@ exports.getPlayers = async (req, res) => {
     const { gender, range, favouriteSport, favouriteSportLevel, max_age } =
       req.body;
 
-    let filter = {};
+    let filter = { _id: { $ne: currentUser._id } };
 
     if (gender && gender !== "All") {
       filter.gender = gender;
@@ -363,19 +363,17 @@ exports.getPlayers = async (req, res) => {
     const allUsers = await User.find({
       ...filter,
       _id: { $nin: req.user.connections },
-    })
-      .select([
-        "img",
-        "first_name",
-        "last_name",
-        "age",
-        "gender",
-        "distance",
-        "favorite_sports",
-        "rating",
-        "birthday",
-      ])
-      .filter((user) => user._id != req.user._id);
+    }).select([
+      "img",
+      "first_name",
+      "last_name",
+      "age",
+      "gender",
+      "distance",
+      "favorite_sports",
+      "rating",
+      "birthday",
+    ]);
 
     const playersWithDistances = allUsers
       .map((user) => {
