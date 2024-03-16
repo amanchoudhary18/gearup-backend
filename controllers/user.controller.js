@@ -194,7 +194,7 @@ exports.update = async (req, res) => {
     "current_address",
     "img",
     "social_media",
-    "posh_training",
+    "posh_score",
   ];
 
   const updateFields = Object.fromEntries(
